@@ -23,6 +23,7 @@ import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
@@ -30,6 +31,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import app.k9mail.legacy.account.AccountManager
 import app.k9mail.legacy.account.Expunge
 import app.k9mail.legacy.account.LegacyAccount
+import app.k9mail.legacy.account.LegacyAccountWrapper
 import app.k9mail.legacy.account.SortType
 import app.k9mail.legacy.message.controller.MessageReference
 import app.k9mail.legacy.message.controller.SimpleMessagingListener
@@ -118,6 +120,7 @@ class MessageListFragment :
     private lateinit var adapter: MessageListAdapter
 
     private lateinit var accountUuids: Array<String>
+    private lateinit var accounts: List<LegacyAccountWrapper>
     private var account: LegacyAccount? = null
     private var currentFolder: FolderInfoHolder? = null
     private var remoteSearchFuture: Future<*>? = null
@@ -242,6 +245,7 @@ class MessageListFragment :
             account = null
             accountUuids = searchAccounts.map { it.uuid }.toTypedArray()
         }
+        accounts = searchAccounts.map(LegacyAccountWrapper::from)
 
         isSingleFolderMode = false
         if (isSingleAccountMode && localSearch.folderIds.size == 1) {
@@ -388,13 +392,13 @@ class MessageListFragment :
 
         val itemTouchHelper = ItemTouchHelper(
             MessageListSwipeCallback(
-                requireContext(),
+                context = requireContext(),
                 resourceProvider = SwipeResourceProvider(requireContext()),
-                swipeActionSupportProvider,
-                swipeRightAction = K9.swipeRightAction,
-                swipeLeftAction = K9.swipeLeftAction,
-                adapter,
-                swipeListener,
+                swipeActionSupportProvider = swipeActionSupportProvider,
+                swipeActions = K9.swipeLeftAction to K9.swipeRightAction,
+                adapter = adapter,
+                listener = swipeListener,
+                accounts = accounts,
             ),
         )
         itemTouchHelper.attachToRecyclerView(recyclerView)
@@ -840,6 +844,14 @@ class MessageListFragment :
                 ConfirmationDialogFragment.newInstance(dialogId, title, message, confirmText, cancelText)
             }
 
+            R.id.dialog_setup_archive_folder -> {
+                val title = "Email can not be archived"
+                val message = "Configure archive folder now"
+                val confirmText = "Set archive folder"
+                val cancelText = "Skip for now"
+                ConfirmationDialogFragment.newInstance(dialogId, title, message, confirmText, cancelText)
+            }
+
             else -> {
                 throw RuntimeException("Called showDialog(int) with unknown dialog id.")
             }
@@ -1171,6 +1183,14 @@ class MessageListFragment :
 
     private fun onArchive(message: MessageReference) {
         onArchive(listOf(message))
+    }
+
+    private fun onArchive(item: MessageListItem) {
+        if (!item.accountWrapper.hasArchiveFolder()) {
+            showDialog(R.id.dialog_setup_archive_folder)
+            return
+        }
+        onArchive(item.messageReference)
     }
 
     private fun onArchive(messages: List<MessageReference>) {
@@ -1716,7 +1736,7 @@ class MessageListFragment :
                 }
 
                 SwipeAction.Archive -> {
-                    onArchive(item.messageReference)
+                    onArchive(item)
                 }
 
                 SwipeAction.Delete -> {
@@ -1754,7 +1774,7 @@ class MessageListFragment :
             SwipeAction.ToggleRead -> !isOutbox
             SwipeAction.ToggleStar -> !isOutbox
             SwipeAction.Archive -> {
-                !isOutbox && item.account.hasArchiveFolder() && item.folderId != item.account.archiveFolderId
+                !isOutbox && item.folderId != item.account.archiveFolderId
             }
 
             SwipeAction.Delete -> true
