@@ -5,6 +5,7 @@ import com.fsck.k9.mail.Body
 import com.fsck.k9.mail.BodyFactory
 import com.fsck.k9.mail.FetchProfile
 import com.fsck.k9.mail.Flag
+import com.fsck.k9.mail.FolderType
 import com.fsck.k9.mail.K9MailLib
 import com.fsck.k9.mail.Message
 import com.fsck.k9.mail.MessageRetrievalListener
@@ -25,6 +26,7 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.max
 import kotlin.math.min
+import net.thunderbird.protocols.imap.folder.attributeName
 
 internal class RealImapFolder(
     private val internalImapStore: InternalImapStore,
@@ -235,7 +237,7 @@ internal class RealImapFolder(
     }
 
     @Throws(MessagingException::class)
-    override fun create(): Boolean {
+    override fun create(folderType: FolderType): Boolean {
         /*
          * This method needs to operate in the unselected mode as well as the selected mode
          * so we must get the connection ourselves if it's not there. We are specifically
@@ -245,12 +247,22 @@ internal class RealImapFolder(
             this.connection ?: connectionManager.getConnection()
         }
 
+        // TODO: Create Capability.CREATE_SPECIAL_USE instead.
+        val hasSpecialUseCapability = connection.hasCapability("CREATE-SPECIAL-USE")
+
         return try {
             val encodedFolderName = folderNameCodec.encode(prefixedName)
             val escapedFolderName = ImapUtility.encodeString(encodedFolderName)
 
+            // https://www.rfc-editor.org/rfc/rfc6154.html#section-5.3
+            val specialUseAttribute = folderType
+                .takeIf { hasSpecialUseCapability && folderType != FolderType.REGULAR }
+                ?.let { "(USE (${folderType.attributeName}))" }
+                .orEmpty()
+
             // https://datatracker.ietf.org/doc/html/rfc3501#section-6.3.3
-            val responses = connection.executeSimpleCommand("CREATE $escapedFolderName")
+            val command = "CREATE $escapedFolderName $specialUseAttribute".trim()
+            val responses = connection.executeSimpleCommand(command)
             responses.any { ImapResponseParser.equalsIgnoreCase(it[0], Responses.OK) }
         } catch (e: NegativeImapResponseException) {
             Timber.e(e, "Unable to create folder %s for %s", serverId, logId)
@@ -629,9 +641,11 @@ internal class RealImapFolder(
                                     val bodyStream: InputStream = literal.toByteArray().inputStream()
                                     message.parse(bodyStream)
                                 }
+
                                 is Int -> {
                                     // All the work was done in FetchBodyCallback.foundLiteral()
                                 }
+
                                 else -> {
                                     // This shouldn't happen
                                     throw MessagingException("Got FETCH response with bogus parameters")
@@ -700,6 +714,7 @@ internal class RealImapFolder(
                                 // Most of the work was done in FetchAttachmentCallback.foundLiteral()
                                 MimeMessageHelper.setBody(part, literal as Body?)
                             }
+
                             is String -> {
                                 val bodyStream: InputStream = literal.toByteArray().inputStream()
                                 val contentTransferEncoding =
@@ -708,6 +723,7 @@ internal class RealImapFolder(
                                 val body = bodyFactory.createBody(contentTransferEncoding, contentType, bodyStream)
                                 MimeMessageHelper.setBody(part, body)
                             }
+
                             else -> {
                                 // This shouldn't happen
                                 throw MessagingException("Got FETCH response with bogus parameters")
@@ -736,20 +752,25 @@ internal class RealImapFolder(
                         flag.equals("\\Deleted", ignoreCase = true) -> {
                             message.setFlag(Flag.DELETED, true)
                         }
+
                         flag.equals("\\Answered", ignoreCase = true) -> {
                             message.setFlag(Flag.ANSWERED, true)
                         }
+
                         flag.equals("\\Seen", ignoreCase = true) -> {
                             message.setFlag(Flag.SEEN, true)
                         }
+
                         flag.equals("\\Flagged", ignoreCase = true) -> {
                             message.setFlag(Flag.FLAGGED, true)
                         }
+
                         flag.equals("\$Forwarded", ignoreCase = true) -> {
                             message.setFlag(Flag.FORWARDED, true)
                             // a message contains FORWARDED FLAG -> so we can also create them
                             internalImapStore.getPermanentFlagsIndex().add(Flag.FORWARDED)
                         }
+
                         flag.equals("\\Draft", ignoreCase = true) -> {
                             message.setFlag(Flag.DRAFT, true)
                         }

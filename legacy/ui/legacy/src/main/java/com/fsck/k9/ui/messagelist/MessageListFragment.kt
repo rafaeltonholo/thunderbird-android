@@ -23,8 +23,8 @@ import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
-import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -66,6 +66,7 @@ import java.util.concurrent.Future
 import kotlinx.datetime.Clock
 import net.jcip.annotations.GuardedBy
 import net.thunderbird.core.android.network.ConnectivityManager
+import net.thunderbird.feature.messages.ui.dialog.SetupArchiveFolderDialogFragmentFactory
 import net.thunderbird.feature.search.LocalSearch
 import net.thunderbird.feature.search.SearchAccount
 import org.koin.android.ext.android.inject
@@ -91,6 +92,7 @@ class MessageListFragment :
     private val accountManager: AccountManager by inject()
     private val connectivityManager: ConnectivityManager by inject()
     private val clock: Clock by inject()
+    private val setupArchiveFolderDialogFragmentFactory: SetupArchiveFolderDialogFragmentFactory by inject()
 
     private val handler = MessageListHandler(this)
     private val activityListener = MessageListActivityListener()
@@ -120,7 +122,7 @@ class MessageListFragment :
     private lateinit var adapter: MessageListAdapter
 
     private lateinit var accountUuids: Array<String>
-    private lateinit var accounts: List<LegacyAccountWrapper>
+    private var accounts: List<LegacyAccountWrapper> = emptyList()
     private var account: LegacyAccount? = null
     private var currentFolder: FolderInfoHolder? = null
     private var remoteSearchFuture: Future<*>? = null
@@ -166,6 +168,8 @@ class MessageListFragment :
     private var isInitialized = false
 
     private var error: Error? = null
+
+    private var messageListSwipeCallback: MessageListSwipeCallback? = null
 
     /**
      * Set this to `true` when the fragment should be considered active. When active, the fragment adds its actions to
@@ -234,7 +238,7 @@ class MessageListFragment :
         localSearch = BundleCompat.getParcelable(arguments, ARG_SEARCH, LocalSearch::class.java)!!
 
         allAccounts = localSearch.searchAllAccounts()
-        val searchAccounts = localSearch.getAccounts(accountManager)
+        val searchAccounts = localSearch.getAccounts(accountManager).also(::updateAccountList)
         if (searchAccounts.size == 1) {
             isSingleAccountMode = true
             val singleAccount = searchAccounts[0]
@@ -245,7 +249,6 @@ class MessageListFragment :
             account = null
             accountUuids = searchAccounts.map { it.uuid }.toTypedArray()
         }
-        accounts = searchAccounts.map(LegacyAccountWrapper::from)
 
         isSingleFolderMode = false
         if (isSingleAccountMode && localSearch.folderIds.size == 1) {
@@ -277,7 +280,18 @@ class MessageListFragment :
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return if (error == null) {
-            inflater.inflate(R.layout.message_list_fragment, container, false)
+            inflater.inflate(R.layout.message_list_fragment, container, false).also {
+                setFragmentResultListener(
+                    SetupArchiveFolderDialogFragmentFactory.RESULT_CODE_DISMISS_REQUEST_KEY,
+                ) { key, bundle ->
+                    Timber.d(
+                        "SetupArchiveFolderDialogFragment fragment listener triggered with " +
+                            "key: $key and bundle: $bundle",
+                    )
+                    loadMessageList(forceUpdate = true)
+                    messageListSwipeCallback?.invalidateSwipeActions(accounts)
+                }
+            }
         } else {
             inflater.inflate(R.layout.message_list_error, container, false)
         }
@@ -399,7 +413,7 @@ class MessageListFragment :
                 adapter = adapter,
                 listener = swipeListener,
                 accounts = accounts,
-            ),
+            ).also { messageListSwipeCallback = it },
         )
         itemTouchHelper.attachToRecyclerView(recyclerView)
 
@@ -458,7 +472,7 @@ class MessageListFragment :
         }
     }
 
-    private fun loadMessageList() {
+    private fun loadMessageList(forceUpdate: Boolean = false) {
         val config = MessageListConfig(
             localSearch,
             showingThreadedList,
@@ -468,7 +482,16 @@ class MessageListFragment :
             activeMessage,
             viewModel.messageSortOverrides.toMap(),
         )
-        viewModel.loadMessageList(config)
+
+        if (forceUpdate) {
+            updateAccountList(accounts = config.search.getAccounts(accountManager))
+        }
+
+        viewModel.loadMessageList(config, forceUpdate)
+    }
+
+    private fun updateAccountList(accounts: List<LegacyAccount>) {
+        this.accounts = accounts.map(LegacyAccountWrapper::from)
     }
 
     fun folderLoading(folderId: Long, loading: Boolean) {
@@ -591,6 +614,7 @@ class MessageListFragment :
 
     override fun onDestroyView() {
         recyclerView = null
+        messageListSwipeCallback = null
         itemTouchHelper = null
         swipeRefreshLayout = null
         floatingActionButton = null
@@ -841,14 +865,6 @@ class MessageListFragment :
                 val message = getString(R.string.dialog_confirm_empty_trash_message)
                 val confirmText = getString(R.string.dialog_confirm_delete_confirm_button)
                 val cancelText = getString(R.string.dialog_confirm_delete_cancel_button)
-                ConfirmationDialogFragment.newInstance(dialogId, title, message, confirmText, cancelText)
-            }
-
-            R.id.dialog_setup_archive_folder -> {
-                val title = "Email can not be archived"
-                val message = "Configure archive folder now"
-                val confirmText = "Set archive folder"
-                val cancelText = "Skip for now"
                 ConfirmationDialogFragment.newInstance(dialogId, title, message, confirmText, cancelText)
             }
 
@@ -1187,7 +1203,10 @@ class MessageListFragment :
 
     private fun onArchive(item: MessageListItem) {
         if (!item.accountWrapper.hasArchiveFolder()) {
-            showDialog(R.id.dialog_setup_archive_folder)
+            setupArchiveFolderDialogFragmentFactory.show(
+                accountUuid = item.account.uuid,
+                fragmentManager = parentFragmentManager,
+            )
             return
         }
         onArchive(item.messageReference)

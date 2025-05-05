@@ -1,6 +1,7 @@
 package com.fsck.k9.backend.api
 
 import com.fsck.k9.mail.FolderType
+import com.fsck.k9.mail.MessagingException
 import java.io.Closeable
 
 interface BackendStorage {
@@ -19,6 +20,7 @@ interface BackendStorage {
 interface BackendFolderUpdater : Closeable {
     fun createFolders(folders: List<FolderInfo>)
     fun deleteFolders(folderServerIds: List<String>)
+    @Throws(MessagingException::class)
     fun changeFolder(folderServerId: String, name: String, type: FolderType)
 }
 
