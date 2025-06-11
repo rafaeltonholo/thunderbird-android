@@ -1,5 +1,6 @@
 plugins {
     id(ThunderbirdPlugins.Library.kmpCompose)
+    id("kotlin-parcelize")
 }
 
 kotlin {
@@ -7,6 +8,13 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.core.common)
         }
+    }
+
+    compilerOptions {
+        freeCompilerArgs.addAll(
+            "-P",
+            "plugin:org.jetbrains.kotlin.parcelize:additionalAnnotation=net.thunderbird.core.common.io.KmpParcelize",
+        )
     }
 }
 

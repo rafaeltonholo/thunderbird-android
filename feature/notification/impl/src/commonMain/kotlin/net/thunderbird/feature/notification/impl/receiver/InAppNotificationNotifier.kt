@@ -1,5 +1,7 @@
 package net.thunderbird.feature.notification.impl.receiver
 
+import net.thunderbird.core.common.provider.ContextProvider
+import net.thunderbird.core.logging.Logger
 import net.thunderbird.feature.notification.api.content.InAppNotification
 import net.thunderbird.feature.notification.api.receiver.NotificationNotifier
 
@@ -10,8 +12,9 @@ import net.thunderbird.feature.notification.api.receiver.NotificationNotifier
  * **Note:** The current implementation is a placeholder and needs to be completed
  * as part of GitHub Issue #9245.
  */
-internal class InAppNotificationNotifier : NotificationNotifier<InAppNotification> {
-    override fun show(notification: InAppNotification) {
-        TODO("Implementation on GitHub Issue #9245")
-    }
-}
+internal interface InAppNotificationNotifier : NotificationNotifier<InAppNotification>
+
+internal expect inline fun <reified TContext> InAppNotificationNotifier(
+    logger: Logger,
+    contextProvider: ContextProvider<TContext>,
+): InAppNotificationNotifier

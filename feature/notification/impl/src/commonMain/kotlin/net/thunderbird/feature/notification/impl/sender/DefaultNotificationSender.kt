@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.flow
 import net.thunderbird.feature.notification.api.command.NotificationCommand
 import net.thunderbird.feature.notification.impl.command.NotificationCommandFactory
 import net.thunderbird.feature.notification.api.content.Notification
+import net.thunderbird.feature.notification.api.sender.NotificationSender
 
 /**
  * Responsible for sending notifications by creating and executing the appropriate commands.
@@ -17,7 +18,7 @@ import net.thunderbird.feature.notification.api.content.Notification
  */
 class DefaultNotificationSender internal constructor(
     private val commandFactory: NotificationCommandFactory,
-) {
+): NotificationSender {
     /**
      * Sends a notification by creating and executing the appropriate commands.
      *
@@ -29,7 +30,7 @@ class DefaultNotificationSender internal constructor(
      * @param notification The [Notification] to be sent.
      * @return A [Flow] that emits the [NotificationCommand.CommandResult] for each executed command.
      */
-    fun send(notification: Notification): Flow<NotificationCommand.CommandResult> = flow {
+    override fun send(notification: Notification): Flow<NotificationCommand.CommandResult> = flow {
         val commands = commandFactory.create(notification)
         commands.forEach { command ->
             emit(command.execute())

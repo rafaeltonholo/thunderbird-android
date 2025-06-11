@@ -1,5 +1,6 @@
 package net.thunderbird.feature.notification.impl.command
 
+import net.thunderbird.feature.notification.api.NotificationId
 import net.thunderbird.feature.notification.api.command.NotificationCommand
 import net.thunderbird.feature.notification.api.content.InAppNotification
 import net.thunderbird.feature.notification.api.receiver.NotificationNotifier
@@ -17,6 +18,15 @@ internal class InAppNotificationCommand(
     notifier: NotificationNotifier<InAppNotification>,
 ) : NotificationCommand<InAppNotification>(notification, notifier) {
     override fun execute(): CommandResult {
-        TODO("Implementation on GitHub Issue #9245")
+        return if (canExecuteCommand()) {
+            notifier.show(id = NotificationId.Undefined, notification = notification)
+            CommandResult.Success(command = this)
+        } else {
+            CommandResult.Failure(command = this, throwable = Exception("Can't execute command."))
+        }
     }
+
+    // TODO: Verify if the app is on foreground. IF it isn't, then should fail
+    //  executing the command
+    private fun canExecuteCommand(): Boolean = true
 }
