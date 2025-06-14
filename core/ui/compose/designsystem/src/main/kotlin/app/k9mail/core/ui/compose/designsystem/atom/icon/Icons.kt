@@ -1,11 +1,16 @@
 package app.k9mail.core.ui.compose.designsystem.atom.icon
 
+import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.material.icons.filled.Attachment
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Outbox
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.StarRate
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Add
@@ -30,6 +35,7 @@ import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Report
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.StarRate
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -50,7 +56,22 @@ object Icons {
             get() = MaterialIcons.Filled.Dot
 
         val Star: ImageVector
-            get() = MaterialIcons.Filled.Star
+            get() = MaterialIcons.Filled.StarRate
+
+        val Label: ImageVector
+            get() = MaterialIcons.AutoMirrored.Filled.Label
+
+        val Document: ImageVector
+            get() = MaterialIcons.Filled.Description
+
+        val Pdf: ImageVector
+            get() = MaterialIcons.Filled.PictureAsPdf
+
+        val Image: ImageVector
+            get() = MaterialIcons.Filled.Image
+
+        val Attachment: ImageVector
+            get() = MaterialIcons.Filled.Attachment
     }
 
     object Outlined {
@@ -143,5 +164,8 @@ object Icons {
 
         val VisibilityOff: ImageVector
             get() = MaterialIcons.Filled.VisibilityOff
+
+        val Star: ImageVector
+            get() = MaterialIcons.Outlined.StarRate
     }
 }

@@ -8,6 +8,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.compose.material3)
+
     implementation(projects.backend.api)
     implementation(projects.core.android.common)
     implementation(projects.core.logging.api)
