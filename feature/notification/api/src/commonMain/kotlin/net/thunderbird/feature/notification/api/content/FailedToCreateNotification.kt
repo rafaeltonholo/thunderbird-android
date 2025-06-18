@@ -18,6 +18,7 @@ import org.jetbrains.compose.resources.getString
 @ConsistentCopyVisibility
 @KmpParcelize
 data class FailedToCreateNotification private constructor(
+    override val accountNumber: Int,
     override val title: String,
     override val contentText: String?,
     override val channel: NotificationChannel,
@@ -34,10 +35,11 @@ data class FailedToCreateNotification private constructor(
          * @return A [FailedToCreateNotification] instance.
          */
         suspend operator fun invoke(
-            id: NotificationId,
+            accountNumber: Int,
             accountUuid: String,
             failedNotification: AppNotification,
         ): FailedToCreateNotification = FailedToCreateNotification(
+            accountNumber = accountNumber,
             title = getString(resource = Res.string.notification_notify_error_title),
             contentText = getString(resource = Res.string.notification_notify_error_text),
             channel = NotificationChannel.Miscellaneous(accountUuid = accountUuid),

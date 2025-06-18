@@ -1,9 +1,9 @@
 package net.thunderbird.feature.notification.impl.command
 
-import net.thunderbird.feature.notification.api.NotificationId
 import net.thunderbird.feature.notification.NotificationSeverity
-import net.thunderbird.feature.notification.api.content.InAppNotification
+import net.thunderbird.feature.notification.api.NotificationIdFactory
 import net.thunderbird.feature.notification.api.command.NotificationCommand
+import net.thunderbird.feature.notification.api.content.InAppNotification
 import net.thunderbird.feature.notification.api.content.SystemNotification
 import net.thunderbird.feature.notification.api.receiver.NotificationNotifier
 
@@ -14,12 +14,16 @@ import net.thunderbird.feature.notification.api.receiver.NotificationNotifier
  * @param notifier The notifier responsible for displaying the notification.
  */
 internal class SystemNotificationCommand(
+    private val notificationIdFactory: NotificationIdFactory,
     notification: SystemNotification,
     notifier: NotificationNotifier<SystemNotification>,
 ) : NotificationCommand<SystemNotification>(notification, notifier) {
     override fun execute(): CommandResult {
         return if (canExecuteCommand()) {
-            notifier.show(id = NotificationId.Undefined, notification = notification)
+            notifier.show(
+                id = notificationIdFactory.next(notification.accountNumber),
+                notification = notification,
+            )
             CommandResult.Success(command = this)
         } else {
             CommandResult.Failure(command = this, throwable = Exception("Can't execute command."))

@@ -30,6 +30,7 @@ sealed class MailNotification : AppNotification(), SystemNotification {
 
     @KmpParcelize
     data class Fetching(
+        override val accountNumber: Int,
         override val title: String,
         override val accessibilityText: String,
         override val contentText: String?,
@@ -47,12 +48,14 @@ sealed class MailNotification : AppNotification(), SystemNotification {
              * @return A [Fetching] notification.
              */
             suspend operator fun invoke(
+                accountNumber: Int,
                 accountUuid: String,
                 accountDisplayName: String,
                 folderName: String?,
             ): Fetching {
                 val title = getString(resource = Res.string.notification_bg_sync_title)
                 return Fetching(
+                    accountNumber = accountNumber,
                     title = title,
                     accessibilityText = folderName?.let { folderName ->
                         getString(
@@ -76,6 +79,7 @@ sealed class MailNotification : AppNotification(), SystemNotification {
 
     @KmpParcelize
     data class Sending(
+        override val accountNumber: Int,
         override val title: String,
         override val accessibilityText: String,
         override val contentText: String?,
@@ -92,9 +96,11 @@ sealed class MailNotification : AppNotification(), SystemNotification {
              * @return A [Sending] notification.
              */
             suspend operator fun invoke(
+                accountNumber: Int,
                 accountUuid: String,
                 accountDisplayName: String,
             ): Sending = Sending(
+                accountNumber = accountNumber,
                 title = getString(resource = Res.string.notification_bg_send_title),
                 accessibilityText = getString(
                     resource = Res.string.notification_bg_send_ticker,
@@ -108,6 +114,7 @@ sealed class MailNotification : AppNotification(), SystemNotification {
 
     @KmpParcelize
     data class SendFailed(
+        override val accountNumber: Int,
         override val title: String,
         override val contentText: String?,
         override val channel: NotificationChannel,
@@ -127,9 +134,11 @@ sealed class MailNotification : AppNotification(), SystemNotification {
              * @return A [SendFailed] notification.
              */
             suspend operator fun invoke(
+                accountNumber: Int,
                 accountUuid: String,
                 exception: Exception,
             ): SendFailed = SendFailed(
+                accountNumber = accountNumber,
                 title = getString(resource = Res.string.send_failure_subject),
                 contentText = exception.rootCauseMassage,
                 channel = NotificationChannel.Miscellaneous(accountUuid = accountUuid),
@@ -178,6 +187,7 @@ sealed class MailNotification : AppNotification(), SystemNotification {
          */
         @KmpParcelize
         data class SingleMail(
+            override val accountNumber: Int,
             override val accountUuid: String,
             val accountName: String,
             override val messagesNotificationChannelSuffix: String,
@@ -205,6 +215,7 @@ sealed class MailNotification : AppNotification(), SystemNotification {
         @ConsistentCopyVisibility
         @KmpParcelize
         data class SummaryMail private constructor(
+            override val accountNumber: Int,
             override val accountUuid: String,
             val accountName: String,
             override val messagesNotificationChannelSuffix: String,
@@ -226,6 +237,7 @@ sealed class MailNotification : AppNotification(), SystemNotification {
                  * @return A [SummaryMail] notification.
                  */
                 suspend operator fun invoke(
+                    accountNumber: Int,
                     accountUuid: String,
                     accountDisplayName: String,
                     messagesNotificationChannelSuffix: String,
@@ -233,6 +245,7 @@ sealed class MailNotification : AppNotification(), SystemNotification {
                     additionalMessagesCount: Int,
                     group: NotificationGroup,
                 ): SummaryMail = SummaryMail(
+                    accountNumber = accountNumber,
                     accountUuid = accountUuid,
                     accountName = accountDisplayName,
                     messagesNotificationChannelSuffix = messagesNotificationChannelSuffix,

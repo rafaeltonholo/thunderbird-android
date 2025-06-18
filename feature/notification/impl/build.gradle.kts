@@ -10,6 +10,9 @@ kotlin {
             implementation(projects.core.logging.api)
             implementation(projects.feature.account.api)
         }
+        androidMain.dependencies {
+            implementation(projects.feature.launcher)
+        }
     }
 }
 

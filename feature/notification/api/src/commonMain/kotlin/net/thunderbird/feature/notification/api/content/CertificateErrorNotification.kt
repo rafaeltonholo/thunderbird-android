@@ -18,6 +18,7 @@ import org.jetbrains.compose.resources.getString
 @ConsistentCopyVisibility
 @KmpParcelize
 data class CertificateErrorNotification private constructor(
+    override val accountNumber: Int,
     override val title: String,
     override val contentText: String,
     val lockScreenTitle: String,
@@ -39,9 +40,11 @@ data class CertificateErrorNotification private constructor(
          * @return A [CertificateErrorNotification] instance.
          */
         suspend operator fun invoke(
+            accountNumber: Int,
             accountUuid: String,
             accountDisplayName: String,
         ): CertificateErrorNotification = CertificateErrorNotification(
+            accountNumber = accountNumber,
             title = getString(resource = Res.string.notification_certificate_error_public, accountDisplayName),
             lockScreenTitle = getString(resource = Res.string.notification_certificate_error_public),
             contentText = getString(resource = Res.string.notification_certificate_error_text),

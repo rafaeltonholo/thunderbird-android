@@ -11,7 +11,7 @@ import org.koin.dsl.module
 
 val appCommonCoreModule: Module = module {
     single<LogLevel> {
-        LogLevel.INFO
+        LogLevel.VERBOSE
     }
 
     single<List<LogSink>> {

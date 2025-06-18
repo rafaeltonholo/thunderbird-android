@@ -17,6 +17,7 @@ import org.jetbrains.compose.resources.getString
 @ConsistentCopyVisibility
 @KmpParcelize
 data class AuthenticationErrorNotification private constructor(
+    override val accountNumber: Int,
     override val title: String,
     override val contentText: String?,
     override val channel: NotificationChannel,
@@ -38,9 +39,11 @@ data class AuthenticationErrorNotification private constructor(
          * @return An [AuthenticationErrorNotification] instance.
          */
         suspend operator fun invoke(
+            accountNumber: Int,
             accountUuid: String,
             accountDisplayName: String,
         ): AuthenticationErrorNotification = AuthenticationErrorNotification(
+            accountNumber = accountNumber,
             title = getString(
                 resource = Res.string.notification_authentication_error_title,
                 accountDisplayName,

@@ -75,6 +75,7 @@ sealed class AppNotification : Notification {
  * @see LockscreenNotificationAppearance
  */
 sealed interface SystemNotification : Notification {
+    val accountNumber: Int
     val lockscreenNotification: SystemNotification get() = this
     val lockscreenNotificationAppearance: LockscreenNotificationAppearance
         get() = LockscreenNotificationAppearance.Public
