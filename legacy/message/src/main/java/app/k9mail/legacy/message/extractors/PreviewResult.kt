@@ -1,56 +1,45 @@
-package app.k9mail.legacy.message.extractors;
+package app.k9mail.legacy.message.extractors
 
+class PreviewResult private constructor(
+    val previewType: PreviewType,
+    private val _previewText: String?,
+) {
+    val isPreviewTextAvailable: Boolean
+        get() = previewType == PreviewType.TEXT
 
-import androidx.annotation.NonNull;
+    val previewText: String
+        get() {
+            check(isPreviewTextAvailable) { "Preview is not available" }
+            checkNotNull(_previewText) { "Preview is not available" }
 
-
-public class PreviewResult {
-    private final PreviewType previewType;
-    private final String previewText;
-
-
-    private PreviewResult(PreviewType previewType, String previewText) {
-        this.previewType = previewType;
-        this.previewText = previewText;
-    }
-
-    public static PreviewResult text(@NonNull String previewText) {
-        return new PreviewResult(PreviewType.TEXT, previewText);
-    }
-
-    public static PreviewResult encrypted() {
-        return new PreviewResult(PreviewType.ENCRYPTED, null);
-    }
-
-    public static PreviewResult none() {
-        return new PreviewResult(PreviewType.NONE, null);
-    }
-
-    public static PreviewResult error() {
-        return new PreviewResult(PreviewType.ERROR, null);
-    }
-
-    public PreviewType getPreviewType() {
-        return previewType;
-    }
-
-    public boolean isPreviewTextAvailable() {
-        return previewType == PreviewType.TEXT;
-    }
-
-    public String getPreviewText() {
-        if (!isPreviewTextAvailable()) {
-            throw new IllegalStateException("Preview is not available");
+            return _previewText
         }
 
-        return previewText;
-    }
-
-
-    public enum PreviewType {
+    enum class PreviewType {
         NONE,
         TEXT,
         ENCRYPTED,
         ERROR
+    }
+
+    companion object {
+        @JvmStatic
+        fun text(previewText: String): PreviewResult {
+            return PreviewResult(PreviewType.TEXT, previewText)
+        }
+
+        fun encrypted(): PreviewResult {
+            return PreviewResult(PreviewType.ENCRYPTED, null)
+        }
+
+        @JvmStatic
+        fun none(): PreviewResult {
+            return PreviewResult(PreviewType.NONE, null)
+        }
+
+        @JvmStatic
+        fun error(): PreviewResult {
+            return PreviewResult(PreviewType.ERROR, null)
+        }
     }
 }
