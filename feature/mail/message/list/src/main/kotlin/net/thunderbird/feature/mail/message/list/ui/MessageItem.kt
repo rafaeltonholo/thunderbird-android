@@ -12,19 +12,26 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -39,6 +46,8 @@ import app.k9mail.core.ui.compose.designsystem.atom.text.TextTitleMedium
 import app.k9mail.core.ui.compose.designsystem.atom.text.TextTitleSmall
 import app.k9mail.core.ui.compose.theme2.MainTheme
 import app.k9mail.core.ui.compose.theme2.thunderbird.ThunderbirdTheme2
+import io.github.serpro69.kfaker.Faker
+import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -50,41 +59,69 @@ import kotlinx.datetime.format
 import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
+import net.thunderbird.feature.mail.message.list.domain.model.MessageAttachment
+import net.thunderbird.feature.mail.message.list.domain.model.MessageIdentity
+import net.thunderbird.feature.mail.message.list.domain.model.UserAccount
 
 private const val MAX_DISPLAYABLE_ATTACHMENTS = 2
 
 @Composable
 fun MessageItem(
+    account: UserAccount,
     subject: String,
     contentPreview: String,
     date: LocalDate,
-    account: MessageAccount,
+    from: MessageIdentity,
     modifier: Modifier = Modifier,
     attachments: ImmutableList<MessageAttachment> = persistentListOf(),
     read: Boolean = false,
     favourite: Boolean = false,
     important: Boolean = false,
     threadCount: Int = 0,
+    shape: Shape = RoundedCornerShape(size = MainTheme.sizes.smaller),
     onClick: () -> Unit = {},
     onFavouriteClick: () -> Unit = {},
 ) {
-    val containerColor = if (read) MainTheme.colors.surfaceContainerHighest else MainTheme.colors.surfaceContainerLowest
+    val containerColor = if (read) MainTheme.colors.surfaceContainerHighest else MainTheme.colors.surfaceContainerLow
     val readAlfa = if (read) 0.5f else 1f
     val textColor = MainTheme.colors.onSurface.copy(alpha = readAlfa)
-    OutlinedCard(
-        modifier = modifier,
+    val density = LocalDensity.current
+    val layoutDirection = LocalLayoutDirection.current
+    Card(
+        modifier = modifier
+            .drawWithCache {
+                onDrawWithContent {
+                    drawContent()
+                    drawOutline(
+                        outline = when (shape) {
+                            is RoundedCornerShape -> shape
+                                .copy(
+                                    topEnd = CornerSize(0),
+                                    bottomEnd = CornerSize(0),
+                                )
+
+                            else -> shape
+                        }.createOutline(
+                            size = size.copy(width = size.width * 0.02f),
+                            layoutDirection = layoutDirection,
+                            density = density,
+                        ),
+                        color = account.color.copy(alpha = 0.5f).compositeOver(containerColor),
+                    )
+                }
+            },
         onClick = onClick,
         colors = CardDefaults.outlinedCardColors(
             containerColor = containerColor,
         ),
-        shape = RoundedCornerShape(size = MainTheme.sizes.smaller),
+        shape = shape,
     ) {
         Row(
             modifier = Modifier.padding(top = MainTheme.spacings.double),
             horizontalArrangement = Arrangement.spacedBy(MainTheme.spacings.default),
         ) {
             Avatar(
-                account = account,
+                author = from,
                 selected = false,
                 onClick = {},
                 modifier = Modifier
@@ -110,7 +147,7 @@ fun MessageItem(
                                 modifier = Modifier.size(MainTheme.sizes.iconSmall),
                             )
                         }
-                        TextTitleSmall(text = account.email, color = textColor)
+                        TextTitleSmall(text = from.email, color = textColor)
                         TextLabelSmall(text = "$threadCount", color = textColor)
                     }
                     val formatter = remember {
@@ -120,7 +157,7 @@ fun MessageItem(
                             dayOfMonth()
                         }
                     }
-                    TextTitleSmall(text = date.format(formatter), color = textColor)
+                    TextLabelSmall(text = date.format(formatter), color = textColor)
                 }
                 Row(
                     modifier = Modifier
@@ -135,6 +172,7 @@ fun MessageItem(
                         TextTitleSmall(
                             text = subject,
                             color = textColor,
+                            overflow = TextOverflow.Ellipsis,
                         )
                         TextBodyMedium(
                             text = contentPreview,
@@ -218,7 +256,7 @@ fun MessageItem(
 
 @Composable
 fun Avatar(
-    account: MessageAccount,
+    author: MessageIdentity,
     selected: Boolean,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
@@ -227,7 +265,7 @@ fun Avatar(
         onClick = onClick,
         modifier = modifier,
         colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = account.color,
+            containerColor = author.color,
         ),
     ) {
         when {
@@ -238,36 +276,23 @@ fun Avatar(
                     tint = MainTheme.colors.surface,
                 )
 
-            account.avatarUrl.isNullOrBlank() ->
+            author.avatarUrl.isNullOrBlank() ->
                 TextTitleMedium(
-                    text = account.email.first().uppercase(),
+                    text = author.email.first().uppercase(),
                 )
 
             else -> RemoteImage(
-                url = account.avatarUrl,
+                url = author.avatarUrl,
             )
         }
     }
-}
-
-data class MessageAccount(
-    val email: String,
-    val color: Color,
-    val avatarUrl: String?,
-)
-
-data class MessageAttachment(
-    val name: String,
-    val type: Type,
-) {
-    enum class Type { Document, Image, Pdf, Other }
 }
 
 private data class PreviewParam(
     val subject: String,
     val contentPreview: String,
     val date: LocalDate,
-    val account: MessageAccount,
+    val from: MessageIdentity,
     val attachments: ImmutableList<MessageAttachment> = persistentListOf(),
     val read: Boolean = false,
     val favourite: Boolean = false,
@@ -288,7 +313,7 @@ private class PreviewParamsCollection : CollectionPreviewParameterProvider<Previ
                     subject = "That is a nice email",
                     contentPreview = "The message's content preview",
                     date = Clock.System.now().toLocalDateTime(TimeZone.UTC).date,
-                    account = MessageAccount(
+                    from = MessageIdentity(
                         email = "rafael@tonholo.com",
                         color = Color.Red,
                         avatarUrl = null,
@@ -305,7 +330,7 @@ private class PreviewParamsCollection : CollectionPreviewParameterProvider<Previ
                     subject = "That is a nice email",
                     contentPreview = "The message's content preview",
                     date = Clock.System.now().toLocalDateTime(TimeZone.UTC).date,
-                    account = MessageAccount(
+                    from = MessageIdentity(
                         email = "rafael@tonholo.com",
                         color = Color.Red,
                         avatarUrl = null,
@@ -428,19 +453,27 @@ private fun Preview(
     @PreviewParameter(PreviewParamsCollection::class) param: PreviewParam,
 ) {
     ThunderbirdTheme2 {
-        MessageItem(
-            subject = param.subject,
-            contentPreview = param.contentPreview,
-            date = param.date,
-            account = param.account,
-            attachments = param.attachments,
-            read = param.read,
-            favourite = param.favourite,
-            important = param.important,
-            threadCount = param.threadCount,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-        )
+        val faker = remember { Faker() }
+        Surface {
+            MessageItem(
+                account = UserAccount(
+                    name = faker.name.name(),
+                    email = faker.internet.safeEmail(),
+                    color = Color(Random.nextLong(0xFF000000, 0xFFFFFFFF)),
+                ),
+                subject = param.subject,
+                contentPreview = param.contentPreview,
+                date = param.date,
+                from = param.from,
+                attachments = param.attachments,
+                read = param.read,
+                favourite = param.favourite,
+                important = param.important,
+                threadCount = param.threadCount,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+            )
+        }
     }
 }

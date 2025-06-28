@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.internal.config.LanguageFeature
+
 plugins {
     id(ThunderbirdPlugins.Library.androidCompose)
     alias(libs.plugins.dev.mokkery)
@@ -7,8 +9,15 @@ android {
     namespace = "net.thunderbird.feature.mail.message.list"
 }
 
+kotlin {
+    sourceSets.all {
+        languageSettings.enableLanguageFeature(LanguageFeature.WhenGuards.name)
+    }
+}
+
 dependencies {
     implementation(libs.androidx.compose.material3)
+    implementation(libs.faker.core)
 
     implementation(projects.backend.api)
     implementation(projects.core.android.common)
