@@ -23,4 +23,7 @@
     <string name="setup_archive_folder_create_archive_folder_failed_sync_folder">Failed sync folder \'%1$s\' with remote. Message: %2$s</string>
     <string name="setup_archive_folder_create_archive_folder_error_folder_name_blank">Folder name cannot be blank</string>
     <string name="setup_archive_folder_create_archive_folder_invalid_folder_name">Invalid folder name \'%1$s\'</string>
+
+    <string name="integrated_inbox_title">Unified Inbox</string>
+    <string name="integrated_inbox_detail">All messages in unified folders</string>
 </resources>

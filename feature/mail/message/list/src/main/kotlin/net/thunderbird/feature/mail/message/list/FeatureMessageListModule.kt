@@ -6,6 +6,11 @@ import net.thunderbird.feature.mail.message.list.domain.usecase.BuildSwipeAction
 import net.thunderbird.feature.mail.message.list.domain.usecase.CreateArchiveFolder
 import net.thunderbird.feature.mail.message.list.domain.usecase.GetAccountFolders
 import net.thunderbird.feature.mail.message.list.domain.usecase.SetArchiveFolder
+import net.thunderbird.feature.mail.message.list.navigation.DefaultMessageListNavigation
+import net.thunderbird.feature.mail.message.list.navigation.MessageListNavigation
+import net.thunderbird.feature.mail.message.list.ui.MessageListContract
+import net.thunderbird.feature.mail.message.list.ui.MessageListViewModel
+import net.thunderbird.feature.mail.message.list.ui.UiMessageMapper
 import net.thunderbird.feature.mail.message.list.ui.dialog.SetupArchiveFolderDialogContract
 import net.thunderbird.feature.mail.message.list.ui.dialog.SetupArchiveFolderDialogFragment
 import net.thunderbird.feature.mail.message.list.ui.dialog.SetupArchiveFolderDialogFragmentFactory
@@ -51,5 +56,27 @@ val featureMessageListModule = module {
     }
     factory<SetupArchiveFolderDialogFragmentFactory> {
         SetupArchiveFolderDialogFragment.Factory
+    }
+
+    factory { parameters ->
+        UiMessageMapper.Factory(
+            logger = get(),
+//            buildSwipeActions = get { parameters },
+        )
+    }
+
+    viewModel { parameters ->
+        MessageListViewModel(
+            logger = get(),
+            accountManager = get(),
+            messageListRepository = get(),
+            uiMessageMapperFactory = get { parameters },
+            stringsResourceManager = get(),
+            accountProfileRepository = get(),
+        ) as MessageListContract.ViewModel
+    }
+
+    single<MessageListNavigation> { parameters ->
+        DefaultMessageListNavigation()
     }
 }

@@ -21,13 +21,18 @@ dependencies {
 
     implementation(projects.backend.api)
     implementation(projects.core.android.common)
+    implementation(projects.core.featureflag)
     implementation(projects.core.logging.api)
     implementation(projects.core.outcome)
     implementation(projects.core.preference.api)
     implementation(projects.core.ui.compose.designsystem)
+    implementation(projects.core.ui.compose.navigation)
     implementation(projects.core.ui.theme.api)
+    implementation(projects.feature.account.api)
     implementation(projects.feature.mail.account.api)
     implementation(projects.feature.mail.folder.api)
+    implementation(projects.feature.navigation.drawer.dropdown)
+    implementation(projects.feature.search)
     implementation(projects.legacy.mailstore)
     implementation(projects.mail.common)
 }

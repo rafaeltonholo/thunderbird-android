@@ -17,17 +17,18 @@ import org.koin.androidx.compose.koinViewModel
 
 @Suppress("LongParameterList")
 @Composable
-internal fun DrawerView(
+fun DrawerView(
     drawerState: FolderDrawerState,
     openAccount: (accountId: String) -> Unit,
     openFolder: (accountId: String, folderId: Long) -> Unit,
     openUnifiedFolder: () -> Unit,
     openManageFolders: () -> Unit,
+    openNewMessageList: () -> Unit,
     openSettings: () -> Unit,
     openAddAccount: () -> Unit,
     closeDrawer: () -> Unit,
     featureFlagProvider: FeatureFlagProvider,
-    viewModel: ViewModel = koinViewModel<DrawerViewModel>(),
+    viewModel: ViewModel = koinViewModel<ViewModel>(),
 ) {
     val (state, dispatch) = viewModel.observe { effect ->
         when (effect) {
@@ -39,6 +40,7 @@ internal fun DrawerView(
 
             Effect.OpenUnifiedFolder -> openUnifiedFolder()
             is Effect.OpenManageFolders -> openManageFolders()
+            is Effect.OpenNewMessageList -> openNewMessageList()
             is Effect.OpenSettings -> openSettings()
             Effect.OpenAddAccount -> openAddAccount()
             Effect.CloseDrawer -> closeDrawer()

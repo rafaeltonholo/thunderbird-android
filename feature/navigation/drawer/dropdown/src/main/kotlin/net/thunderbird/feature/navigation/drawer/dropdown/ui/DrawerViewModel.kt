@@ -33,7 +33,7 @@ private const val DRAWER_CLOSE_DELAY = 250L
 private const val ACCOUNT_CLOSE_DELAY = 150L
 
 @Suppress("MagicNumber", "TooManyFunctions")
-internal class DrawerViewModel(
+class DrawerViewModel(
     private val getDrawerConfig: UseCase.GetDrawerConfig,
     private val saveDrawerConfig: UseCase.SaveDrawerConfig,
     private val getDisplayAccounts: UseCase.GetDisplayAccounts,
@@ -43,10 +43,9 @@ internal class DrawerViewModel(
     private val syncAllAccounts: UseCase.SyncAllAccounts,
     private val maxNestingLevel: Int = 2,
     initialState: State = State(),
-) : BaseViewModel<State, Event, Effect>(
+) : ViewModel(
     initialState = initialState,
-),
-    ViewModel {
+) {
 
     init {
         viewModelScope.launch {
@@ -177,6 +176,7 @@ internal class DrawerViewModel(
             }
 
             Event.OnManageFoldersClick -> emitEffect(Effect.OpenManageFolders)
+            Event.OnNewMessageListClick -> emitEffect(Effect.OpenNewMessageList)
             Event.OnSettingsClick -> emitEffect(Effect.OpenSettings)
             Event.OnSyncAccount -> onSyncAccount()
             Event.OnSyncAllAccounts -> onSyncAllAccounts()

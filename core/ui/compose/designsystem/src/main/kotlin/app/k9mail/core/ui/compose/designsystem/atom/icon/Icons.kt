@@ -31,6 +31,7 @@ import androidx.compose.material.icons.outlined.Inbox
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.Mail
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Report
 import androidx.compose.material.icons.outlined.Security
@@ -167,5 +168,8 @@ object Icons {
 
         val Star: ImageVector
             get() = MaterialIcons.Outlined.StarRate
+
+        val Mail: ImageVector
+            get() = MaterialIcons.Outlined.Mail
     }
 }

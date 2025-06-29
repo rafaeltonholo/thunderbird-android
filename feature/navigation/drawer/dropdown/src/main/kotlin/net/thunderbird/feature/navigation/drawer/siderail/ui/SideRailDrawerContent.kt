@@ -79,6 +79,7 @@ internal fun SideRailDrawerContent(
                     SideRailSettingList(
                         onAccountSelectorClick = { onEvent(Event.OnAccountSelectorClick) },
                         onManageFoldersClick = { onEvent(Event.OnManageFoldersClick) },
+                        onNewMessageListClick = { onEvent(Event.OnNewMessageListClick) },
                         showAccountSelector = state.config.showAccountSelector,
                     )
                 }

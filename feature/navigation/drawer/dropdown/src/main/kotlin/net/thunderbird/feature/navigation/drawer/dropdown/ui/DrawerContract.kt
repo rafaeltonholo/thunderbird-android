@@ -1,6 +1,7 @@
 package net.thunderbird.feature.navigation.drawer.dropdown.ui
 
 import androidx.compose.runtime.Stable
+import app.k9mail.core.ui.compose.common.mvi.BaseViewModel
 import app.k9mail.core.ui.compose.common.mvi.UnidirectionalViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -9,9 +10,9 @@ import net.thunderbird.feature.navigation.drawer.dropdown.domain.entity.DisplayA
 import net.thunderbird.feature.navigation.drawer.dropdown.domain.entity.DisplayFolder
 import net.thunderbird.feature.navigation.drawer.dropdown.domain.entity.DisplayTreeFolder
 
-internal interface DrawerContract {
+interface DrawerContract {
 
-    interface ViewModel : UnidirectionalViewModel<State, Event, Effect>
+    abstract class ViewModel(initialState: State) : BaseViewModel<State, Event, Effect>(initialState = initialState)
 
     @Stable
     data class State(
@@ -44,6 +45,7 @@ internal interface DrawerContract {
         data class OnFolderClick(val folder: DisplayFolder) : Event
         data object OnAccountSelectorClick : Event
         data object OnManageFoldersClick : Event
+        data object OnNewMessageListClick : Event
         data object OnSettingsClick : Event
         data object OnSyncAccount : Event
         data object OnSyncAllAccounts : Event
@@ -55,6 +57,7 @@ internal interface DrawerContract {
         data class OpenFolder(val accountId: String, val folderId: Long) : Effect
         data object OpenUnifiedFolder : Effect
         data object OpenManageFolders : Effect
+        data object OpenNewMessageList : Effect
         data object OpenSettings : Effect
         data object OpenAddAccount : Effect
         data object CloseDrawer : Effect

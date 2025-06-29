@@ -18,7 +18,7 @@ import net.thunderbird.feature.navigation.drawer.dropdown.ui.DrawerView
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-internal data class FolderDrawerState(
+data class FolderDrawerState(
     val selectedAccountUuid: String? = null,
     val selectedFolderId: String? = null,
 )
@@ -30,6 +30,7 @@ class DropDownDrawer(
     private val openFolder: (accountId: String, folderId: Long) -> Unit,
     private val openUnifiedFolder: () -> Unit,
     private val openManageFolders: () -> Unit,
+    private val openNewMessageList: () -> Unit,
     private val openSettings: () -> Unit,
     private val openAddAccount: () -> Unit,
     createDrawerListener: () -> DrawerLayout.DrawerListener,
@@ -56,6 +57,7 @@ class DropDownDrawer(
                     openFolder = openFolder,
                     openUnifiedFolder = openUnifiedFolder,
                     openManageFolders = openManageFolders,
+                    openNewMessageList = openNewMessageList,
                     openSettings = openSettings,
                     openAddAccount = openAddAccount,
                     featureFlagProvider = featureFlagProvider,

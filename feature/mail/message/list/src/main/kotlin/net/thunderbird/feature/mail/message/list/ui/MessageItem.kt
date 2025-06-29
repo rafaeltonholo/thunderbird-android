@@ -46,6 +46,7 @@ import app.k9mail.core.ui.compose.designsystem.atom.text.TextTitleMedium
 import app.k9mail.core.ui.compose.designsystem.atom.text.TextTitleSmall
 import app.k9mail.core.ui.compose.theme2.MainTheme
 import app.k9mail.core.ui.compose.theme2.thunderbird.ThunderbirdTheme2
+import app.k9mail.core.ui.compose.theme2.toHarmonizedColor
 import io.github.serpro69.kfaker.Faker
 import kotlin.random.Random
 import kotlin.time.ExperimentalTime
@@ -53,7 +54,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.datetime.Clock
-import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
 import kotlinx.datetime.format.MonthNames
@@ -70,8 +71,8 @@ fun MessageItem(
     account: UserAccount,
     subject: String,
     contentPreview: String,
-    date: LocalDate,
-    from: MessageIdentity,
+    dateTime: LocalDateTime,
+    from: ImmutableList<MessageIdentity>,
     modifier: Modifier = Modifier,
     attachments: ImmutableList<MessageAttachment> = persistentListOf(),
     read: Boolean = false,
@@ -106,7 +107,7 @@ fun MessageItem(
                             layoutDirection = layoutDirection,
                             density = density,
                         ),
-                        color = account.color.copy(alpha = 0.5f).compositeOver(containerColor),
+                        color = account.color.copy(alpha = 0.5f).toHarmonizedColor(containerColor),
                     )
                 }
             },
@@ -121,7 +122,7 @@ fun MessageItem(
             horizontalArrangement = Arrangement.spacedBy(MainTheme.spacings.default),
         ) {
             Avatar(
-                author = from,
+                author = from.first(),
                 selected = false,
                 onClick = {},
                 modifier = Modifier
@@ -147,17 +148,29 @@ fun MessageItem(
                                 modifier = Modifier.size(MainTheme.sizes.iconSmall),
                             )
                         }
-                        TextTitleSmall(text = from.email, color = textColor)
-                        TextLabelSmall(text = "$threadCount", color = textColor)
-                    }
-                    val formatter = remember {
-                        LocalDate.Format {
-                            monthName(MonthNames.ENGLISH_ABBREVIATED)
-                            char(' ')
-                            dayOfMonth()
+                        TextTitleSmall(
+                            text = remember(from) { from.joinToString { it.email } },
+                            color = textColor,
+                        )
+                        if (threadCount > 0) {
+                            TextLabelSmall(text = "$threadCount", color = textColor)
                         }
                     }
-                    TextLabelSmall(text = date.format(formatter), color = textColor)
+                    val formatter = remember {
+                        LocalDateTime.Format {
+                            val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+                            if (today == dateTime.date) {
+                                hour()
+                                char(':')
+                                minute()
+                            } else {
+                                monthName(MonthNames.ENGLISH_ABBREVIATED)
+                                char(' ')
+                                dayOfMonth()
+                            }
+                        }
+                    }
+                    TextLabelSmall(text = dateTime.format(formatter), color = textColor)
                 }
                 Row(
                     modifier = Modifier
@@ -291,8 +304,8 @@ fun Avatar(
 private data class PreviewParam(
     val subject: String,
     val contentPreview: String,
-    val date: LocalDate,
-    val from: MessageIdentity,
+    val date: LocalDateTime,
+    val from: ImmutableList<MessageIdentity>,
     val attachments: ImmutableList<MessageAttachment> = persistentListOf(),
     val read: Boolean = false,
     val favourite: Boolean = false,
@@ -312,11 +325,13 @@ private class PreviewParamsCollection : CollectionPreviewParameterProvider<Previ
                 PreviewParam(
                     subject = "That is a nice email",
                     contentPreview = "The message's content preview",
-                    date = Clock.System.now().toLocalDateTime(TimeZone.UTC).date,
-                    from = MessageIdentity(
-                        email = "rafael@tonholo.com",
-                        color = Color.Red,
-                        avatarUrl = null,
+                    date = Clock.System.now().toLocalDateTime(TimeZone.UTC),
+                    from = persistentListOf(
+                        MessageIdentity(
+                            email = "rafael@tonholo.com",
+                            color = Color.Red,
+                            avatarUrl = null,
+                        ),
                     ),
                     attachments = attachments,
                     read = true,
@@ -329,11 +344,13 @@ private class PreviewParamsCollection : CollectionPreviewParameterProvider<Previ
                 PreviewParam(
                     subject = "That is a nice email",
                     contentPreview = "The message's content preview",
-                    date = Clock.System.now().toLocalDateTime(TimeZone.UTC).date,
-                    from = MessageIdentity(
-                        email = "rafael@tonholo.com",
-                        color = Color.Red,
-                        avatarUrl = null,
+                    date = Clock.System.now().toLocalDateTime(TimeZone.UTC),
+                    from = persistentListOf(
+                        MessageIdentity(
+                            email = "rafael@tonholo.com",
+                            color = Color.Red,
+                            avatarUrl = null,
+                        ),
                     ),
                     attachments = attachments,
                     read = false,
@@ -457,13 +474,14 @@ private fun Preview(
         Surface {
             MessageItem(
                 account = UserAccount(
+                    id = "",
                     name = faker.name.name(),
                     email = faker.internet.safeEmail(),
                     color = Color(Random.nextLong(0xFF000000, 0xFFFFFFFF)),
                 ),
                 subject = param.subject,
                 contentPreview = param.contentPreview,
-                date = param.date,
+                dateTime = param.date,
                 from = param.from,
                 attachments = param.attachments,
                 read = param.read,

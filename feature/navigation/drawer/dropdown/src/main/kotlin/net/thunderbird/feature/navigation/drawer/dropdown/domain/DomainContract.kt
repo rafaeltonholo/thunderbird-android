@@ -8,7 +8,7 @@ import net.thunderbird.feature.navigation.drawer.dropdown.domain.entity.DisplayT
 import net.thunderbird.feature.navigation.drawer.dropdown.domain.entity.UnifiedDisplayFolder
 import net.thunderbird.feature.navigation.drawer.dropdown.domain.entity.UnifiedDisplayFolderType
 
-internal interface DomainContract {
+interface DomainContract {
 
     interface UseCase {
         fun interface GetDrawerConfig {

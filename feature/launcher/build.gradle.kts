@@ -18,6 +18,7 @@ dependencies {
     implementation(projects.feature.account.setup)
 
     implementation(projects.feature.funding.api)
+    implementation(projects.feature.mail.message.list)
 
     implementation(libs.androidx.activity.compose)
 

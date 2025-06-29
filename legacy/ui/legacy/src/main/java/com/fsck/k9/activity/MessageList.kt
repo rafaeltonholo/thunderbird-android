@@ -645,6 +645,9 @@ open class MessageList :
                     openFolder = { accountId, folderId -> openFolder(accountId, folderId) },
                     openUnifiedFolder = { openUnifiedInbox() },
                     openManageFolders = { launchManageFoldersScreen() },
+                    openNewMessageList = {
+                        FeatureLauncherActivity.launch(this, FeatureLauncherTarget.NewMessageList)
+                    },
                     openSettings = { SettingsActivity.launch(this) },
                     createDrawerListener = { createDrawerListener() },
                 )
