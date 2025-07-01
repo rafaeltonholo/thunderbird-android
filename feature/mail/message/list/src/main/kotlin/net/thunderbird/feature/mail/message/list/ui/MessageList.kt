@@ -1,32 +1,52 @@
 package net.thunderbird.feature.mail.message.list.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastAny
 import app.k9mail.core.ui.compose.common.mvi.observe
 import app.k9mail.core.ui.compose.designsystem.atom.button.ButtonIcon
 import app.k9mail.core.ui.compose.designsystem.atom.icon.Icons
 import app.k9mail.core.ui.compose.designsystem.atom.text.TextHeadlineLarge
 import app.k9mail.core.ui.compose.designsystem.atom.text.TextLabelMedium
+import app.k9mail.core.ui.compose.designsystem.atom.text.TextLabelSmall
+import app.k9mail.core.ui.compose.designsystem.atom.text.TextTitleLarge
+import app.k9mail.core.ui.compose.designsystem.atom.text.TextTitleSmall
+import app.k9mail.core.ui.compose.designsystem.molecule.LoadingView
 import app.k9mail.core.ui.compose.designsystem.template.Scaffold
 import app.k9mail.core.ui.compose.theme2.MainTheme
 import app.k9mail.core.ui.compose.theme2.thunderbird.ThunderbirdTheme2
@@ -56,22 +76,42 @@ import net.thunderbird.feature.navigation.drawer.dropdown.ui.DrawerView
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
+private const val LAZY_COLUMN_KEY_FOLDER_NAME =
+    "net.thunderbird.feature.mail.message.list.ui.LAZY_COLUMN_KEY_FOLDER_NAME"
+private const val LAZY_COLUMN_KEY_ACCOUNT_NAME =
+    "net.thunderbird.feature.mail.message.list.ui.LAZY_COLUMN_KEY_ACCOUNT_NAME"
+
 @Composable
 internal fun MessageList(
     modifier: Modifier = Modifier,
     viewModel: MessageListContract.ViewModel = koinViewModel(),
 ) {
+    val scope = rememberCoroutineScope()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val (state, dispatchEvent) = viewModel.observe { effect ->
-        // TODO.
+        when (effect) {
+            MessageListContract.Effect.CloseDrawer -> scope.launch {
+                drawerState.close()
+            }
+        }
     }
+
 
     MessageList(
         state = state.value,
         featureFlagProvider = koinInject(),
         drawerViewModel = koinViewModel<DrawerContract.ViewModel>(),
         modifier = modifier,
+        drawerState = drawerState,
         onOpenAccount = { },
-        onOpenFolder = { accountId, folderId -> },
+        onOpenFolder = { accountId, folderId ->
+            dispatchEvent(
+                MessageListContract.Event.LoadFolderMessage(
+                    accountId,
+                    folderId,
+                ),
+            )
+        },
         onOpenUnifiedFolder = { },
         onOpenManageFolders = { },
         onOpenNewMessageList = { },
@@ -80,13 +120,21 @@ internal fun MessageList(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+data class MessageListToolbarState(
+    val shouldShowFolderName: Boolean,
+    val shouldShowAccountName: Boolean,
+    val isFolderNameVisible: Boolean,
+    val isAccountNameVisible: Boolean,
+)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 private fun MessageList(
     state: MessageListContract.State,
     featureFlagProvider: FeatureFlagProvider,
     drawerViewModel: DrawerContract.ViewModel,
     modifier: Modifier = Modifier,
+    drawerState: DrawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
     onOpenAccount: (accountId: String) -> Unit = {},
     onOpenFolder: (accountId: String, folderId: Long) -> Unit = { _, _ -> },
     onOpenUnifiedFolder: () -> Unit = {},
@@ -95,8 +143,21 @@ private fun MessageList(
     onOpenSettings: () -> Unit = {},
     onCloseDrawer: () -> Unit = {},
 ) {
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val lazyListState = rememberLazyListState()
+    val toolbarState by remember(state, lazyListState) {
+        derivedStateOf {
+            val visibleItemsInfo = lazyListState.layoutInfo.visibleItemsInfo
+            MessageListToolbarState(
+                shouldShowFolderName = state.folderName.orEmpty().isNotBlank(),
+                shouldShowAccountName = state.accountName.orEmpty().isNotBlank(),
+                isFolderNameVisible = visibleItemsInfo.fastAny { it.key == LAZY_COLUMN_KEY_FOLDER_NAME },
+                isAccountNameVisible = visibleItemsInfo.fastAny { it.key == LAZY_COLUMN_KEY_FOLDER_NAME },
+            )
+
+        }
+    }
+
     BackHandler(enabled = drawerState.isOpen) {
         scope.launch {
             drawerState.close()
@@ -122,11 +183,8 @@ private fun MessageList(
     ) {
         Scaffold(
             topBar = {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text("Thunderbird")
-                    },
-                    navigationIcon = {
+                val navigationIcon = remember {
+                    movableContentOf {
                         ButtonIcon(
                             onClick = {
                                 scope.launch {
@@ -138,7 +196,52 @@ private fun MessageList(
                             imageVector = Icons.Outlined.Menu,
                             contentDescription = "Menu",
                         )
+                    }
+                }
+                TopAppBar(
+                    title = {
+                        SharedTransitionLayout {
+                            AnimatedContent(toolbarState) { toolbarState ->
+                                with(toolbarState) {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.CenterStart,
+                                    ) {
+                                        when {
+                                            !state.isLoading && (isFolderNameVisible || isAccountNameVisible) ->
+                                                Text(
+                                                    text = "Thunderbird",
+                                                    modifier = Modifier
+                                                        .align(Alignment.Center)
+                                                        .offset(x = (-24).dp)
+                                                        .sharedBounds(
+                                                            sharedContentState = rememberSharedContentState(key = "toolbar_title"),
+                                                            animatedVisibilityScope = this@AnimatedContent,
+                                                        ),
+                                                )
+
+                                            else ->
+                                                Column {
+                                                    TextTitleLarge(
+                                                        text = state.folderName.orEmpty(),
+                                                        modifier = Modifier.sharedBounds(
+                                                            sharedContentState = rememberSharedContentState(key = "toolbar_title"),
+                                                            animatedVisibilityScope = this@AnimatedContent,
+                                                        ),
+                                                    )
+                                                    if (!toolbarState.isAccountNameVisible) {
+                                                        TextLabelSmall(
+                                                            text = state.accountName.orEmpty(),
+                                                        )
+                                                    }
+                                                }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
+                    navigationIcon = navigationIcon,
                 )
             },
             modifier = modifier,
@@ -148,10 +251,51 @@ private fun MessageList(
                     .padding(paddingValues)
                     .fillMaxSize(),
                 contentPadding = PaddingValues(MainTheme.spacings.double),
+                state = lazyListState,
             ) {
-                if (state.groups.isEmpty()) {
+
+                item(key = LAZY_COLUMN_KEY_FOLDER_NAME) {
+                    AnimatedVisibility(
+                        visible = toolbarState.shouldShowFolderName,
+                    ) {
+                        TextHeadlineLarge(
+                            text = state
+                                .folderName
+                                .orEmpty(),
+
+                            )
+                    }
+                }
+
+                item(key = LAZY_COLUMN_KEY_ACCOUNT_NAME) {
+                    AnimatedVisibility(
+                        visible = toolbarState.shouldShowAccountName,
+                    ) {
+                        TextTitleSmall(
+                            text = state.accountName.orEmpty(),
+                        )
+                    }
+                }
+
+                if (state.folderName.isNullOrBlank().not() || state.accountName.isNullOrBlank().not()) {
                     item {
-                        TextHeadlineLarge("Nothing to show here.")
+                        Spacer(modifier = Modifier.height(MainTheme.spacings.double))
+                    }
+                }
+
+                if (state.isLoading.not() && state.groups.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillParentMaxWidth()
+                                .fillParentMaxHeight(fraction = 0.8f),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            TextHeadlineLarge(
+                                text = "Nothing to show here.",
+                                textAlign = TextAlign.Center,
+                            )
+                        }
                     }
                 }
 
@@ -202,7 +346,8 @@ private fun MessageList(
 
                                 else -> RoundedCornerShape(roundCorner)
                             },
-                            read = message.isRead,
+                            read = message.read,
+                            favourite = message.starred,
                             modifier = Modifier.padding(vertical = 1.dp),
                         )
                     }
@@ -211,9 +356,16 @@ private fun MessageList(
                         Spacer(modifier = Modifier.height(MainTheme.spacings.double))
                     }
                 }
+
+                item {
+                    Crossfade(state.isLoading) { isLoading ->
+                        if (isLoading) {
+                            LoadingView()
+                        }
+                    }
+                }
             }
         }
-
     }
 }
 
@@ -266,8 +418,9 @@ private fun Preview() {
                             avatarUrl = null,
                         ),
                     ),
-                    isRead = Random.nextBoolean(),
+                    read = Random.nextBoolean(),
                     threadCount = Random.nextInt(10),
+                    starred = Random.nextBoolean(),
 //                    swipeActions = SwipeActions(
 //                        leftAction = SwipeAction.Archive,
 //                        rightAction = SwipeAction.Spam,
@@ -292,7 +445,11 @@ private fun Preview() {
         }
         MessageList(
             state = MessageListContract.State(
-                groups = groups,
+                isLoading = false,
+                folderName = "Inbox",
+                accountName = "Unified Account",
+                groups = persistentListOf(),
+//                groups = groups,
             ),
             featureFlagProvider = {
                 FeatureFlagResult.Enabled

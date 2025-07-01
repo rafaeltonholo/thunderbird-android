@@ -36,7 +36,8 @@ import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Report
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.StarRate
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -167,7 +168,7 @@ object Icons {
             get() = MaterialIcons.Filled.VisibilityOff
 
         val Star: ImageVector
-            get() = MaterialIcons.Outlined.StarRate
+            get() = MaterialIcons.Outlined.StarOutline
 
         val Mail: ImageVector
             get() = MaterialIcons.Outlined.Mail

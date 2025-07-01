@@ -15,16 +15,22 @@ interface MessageListContract {
     ) : BaseViewModel<State, Event, Effect>(initialState), UnidirectionalViewModel<State, Event, Effect>
 
     data class State(
+        val folderName: String? = null,
+        val accountName: String? = null,
         val drawerState: FolderDrawerState = FolderDrawerState(),
         val groups: ImmutableList<MessageGroup> = persistentListOf(),
-        val isLoadingMore: Boolean = true,
+        val isLoading: Boolean = true,
     )
     sealed interface Event {
         data object LoadMore : Event
         data class OnSwipeLeft(val message: Message, val swipeAction: SwipeAction) : Event
         data class OnSwipeRight(val message: Message, val swipeAction: SwipeAction) : Event
         data class OnFavoriteClick(val message: Message) : Event
+
+        data class LoadFolderMessage(val accountId: String, val folderId: Long) : Event
     }
 
-    sealed interface Effect
+    sealed interface Effect {
+        data object CloseDrawer : Effect
+    }
 }

@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -33,11 +34,13 @@ import net.thunderbird.feature.account.profile.AccountProfile
 import net.thunderbird.feature.account.profile.AccountProfileRepository
 import net.thunderbird.feature.mail.account.api.AccountManager
 import net.thunderbird.feature.mail.account.api.BaseAccount
+import net.thunderbird.feature.mail.folder.api.domain.repository.LocalFolderRepository
 import net.thunderbird.feature.mail.message.list.R
 import net.thunderbird.feature.mail.message.list.domain.model.Message
 import net.thunderbird.feature.mail.message.list.domain.model.MessageGroup
 import net.thunderbird.feature.mail.message.list.domain.model.MessageIdentity
 import net.thunderbird.feature.mail.message.list.domain.model.UserAccount
+import net.thunderbird.feature.search.LocalMessageSearch
 import net.thunderbird.feature.search.SearchAccount
 import net.thunderbird.feature.search.sql.SqlWhereClause
 
@@ -51,24 +54,35 @@ internal class MessageListViewModel(
     private val uiMessageMapperFactory: UiMessageMapper.Factory,
     private val stringsResourceManager: StringsResourceManager,
     private val accountProfileRepository: AccountProfileRepository,
+    private val localFolderRepository: LocalFolderRepository<BaseAccount>,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val mainImmediateDispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
 ) : MessageListContract.ViewModel(
-    initialState = MessageListContract.State(),
+    initialState = MessageListContract.State(folderName = "Inbox"),
 ) {
 
     init {
         viewModelScope.launch {
-            updateState { it.copy(isLoadingMore = true) }
+            updateState { it.copy(isLoading = true) }
             fetchAccounts()
                 .flowOn(ioDispatcher)
+                .onEach { accounts ->
+                    when (accounts.size) {
+                        1 -> {
+                            val account = accounts.first()
+                            updateState { it.copy(accountName = account.name ?: account.email) }
+                        }
+
+                        else -> updateState { it.copy(accountName = "Unified Account") }
+                    }
+                }
                 .flatMapConcat { accounts -> fetchMessages(accounts) }
                 .flowOn(ioDispatcher)
-                .flatMapConcat { messages -> createMessageGroups(messages) }
+                .flatMapConcat { messages -> flowOf(createMessageGroups(messages)) }
                 .flowOn(mainImmediateDispatcher)
                 .onEach { groups ->
                     logger.debug(TAG) { "onEach(groups) called with: groups = $groups" }
-                    updateState { it.copy(groups = groups.toPersistentList(), isLoadingMore = false) }
+                    updateState { it.copy(groups = groups.toPersistentList(), isLoading = false) }
                 }
                 .flatMapConcat { groups ->
                     fetchProfiles(
@@ -116,7 +130,20 @@ internal class MessageListViewModel(
     }
 
     override fun event(event: MessageListContract.Event) {
-        TODO("Not yet implemented")
+        when (event) {
+            is MessageListContract.Event.LoadFolderMessage -> {
+                fetchMessages(
+                    accountUuid = event.accountId,
+                    folderId = event.folderId,
+                )
+                emitEffect(MessageListContract.Effect.CloseDrawer)
+            }
+
+            MessageListContract.Event.LoadMore -> TODO()
+            is MessageListContract.Event.OnFavoriteClick -> TODO()
+            is MessageListContract.Event.OnSwipeLeft -> TODO()
+            is MessageListContract.Event.OnSwipeRight -> TODO()
+        }
     }
 
     private fun fetchAccounts(): Flow<List<BaseAccount>> = flow {
@@ -151,30 +178,71 @@ internal class MessageListViewModel(
                         selection = whereClause.selection,
                         selectionArgs = whereClause.selectionArgs.toTypedArray(),
                         sortOrder = "internal_date",
-                        messageMapper = uiMessageMapperFactory.create(account, null),
+                        messageMapper = uiMessageMapperFactory.create(account, profile = null),
                     )
                 },
             )
         }
     }
 
-    private fun createMessageGroups(messages: List<Message>): Flow<List<MessageGroup>> {
-        logger.debug(TAG) { "createMessageGroups() called with: messages = $messages" }
-        return flowOf(
-            messages
-                .sortedByDescending { it.dateTime }
-                .groupBy { it.dateTime.date }
-                .map { (dateTime, messages) ->
-                    MessageGroup(
-                        date = dateTime,
-                        messages = messages.toPersistentList(),
-                        accounts = messages
-                            .associate { it.account.id to it.account }
-                            .toImmutableMap(),
+    private fun fetchMessages(accountUuid: String, folderId: Long) {
+        logger.debug(TAG) { "fetchMessages() called with: accountUuid = $accountUuid, folderId = $folderId" }
+        viewModelScope.launch(ioDispatcher) {
+            val account = accountManager.getAccount(accountUuid) ?: return@launch
+            val search = LocalMessageSearch().apply {
+                addAccountUuid(accountUuid)
+                addAllowedFolder(folderId)
+            }
+
+            logger.debug(TAG) { "fetchMessages: search = $search" }
+
+            val whereClause = SqlWhereClause
+                .Builder()
+                .withConditions(node = search.conditions)
+                .build()
+
+            val messages = messageListRepository.getMessages(
+                accountUuid = accountUuid,
+                selection = whereClause.selection,
+                selectionArgs = whereClause.selectionArgs.toTypedArray(),
+                sortOrder = "internal_date",
+                messageMapper = uiMessageMapperFactory.create(account, profile = null),
+            )
+            logger.debug(TAG) { "fetchMessages: messages = $messages" }
+
+            val folder = localFolderRepository.getLocalFolder(account, folderId)
+
+            logger.debug(TAG) { "fetchMessages: folder = $folder" }
+
+            withContext(mainImmediateDispatcher) {
+                val groups = createMessageGroups(messages)
+
+                updateState { state ->
+                    state.copy(
+                        accountName = account.name,
+                        folderName = folder?.name,
+                        groups = groups.toPersistentList(),
                     )
                 }
-                .toPersistentList(),
-        )
+            }
+        }
+    }
+
+    private fun createMessageGroups(messages: List<Message>): List<MessageGroup> {
+        logger.debug(TAG) { "createMessageGroups() called with: messages = $messages" }
+        return messages
+            .sortedByDescending { it.dateTime }
+            .groupBy { it.dateTime.date }
+            .map { (dateTime, messages) ->
+                MessageGroup(
+                    date = dateTime,
+                    messages = messages.toPersistentList(),
+                    accounts = messages
+                        .associate { it.account.id to it.account }
+                        .toImmutableMap(),
+                )
+            }
+            .toPersistentList()
     }
 
     private fun fetchProfiles(accountIds: Set<AccountId>): Flow<List<AccountProfile>> {
@@ -225,8 +293,10 @@ internal class UiMessageMapper(
                     avatarUrl = null,
                 )
             }.toPersistentList(),
-            isRead = message.isRead,
+            read = message.isRead,
             threadCount = message.threadCount,
+            starred = message.isStarred,
+
             //        swipeActions = buildSwipeActions(
             //            accountUuids = setOf(account.uuid),
             //            isIncomingServerPop3 = { false }, // TODO.

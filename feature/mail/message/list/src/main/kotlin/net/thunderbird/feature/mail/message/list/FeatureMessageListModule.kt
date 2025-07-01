@@ -73,6 +73,7 @@ val featureMessageListModule = module {
             uiMessageMapperFactory = get { parameters },
             stringsResourceManager = get(),
             accountProfileRepository = get(),
+            localFolderRepository = get(),
         ) as MessageListContract.ViewModel
     }
 
