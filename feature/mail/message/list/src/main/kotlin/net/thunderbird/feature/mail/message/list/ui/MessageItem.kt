@@ -79,6 +79,7 @@ fun MessageItem(
     favourite: Boolean = false,
     important: Boolean = false,
     threadCount: Int = 0,
+    showAccountColorIndicator: Boolean = true,
     shape: Shape = RoundedCornerShape(size = MainTheme.sizes.smaller),
     onClick: () -> Unit = {},
     onFavouriteClick: () -> Unit = {},
@@ -93,22 +94,27 @@ fun MessageItem(
             .drawWithCache {
                 onDrawWithContent {
                     drawContent()
-                    drawOutline(
-                        outline = when (shape) {
-                            is RoundedCornerShape -> shape
-                                .copy(
-                                    topEnd = CornerSize(0),
-                                    bottomEnd = CornerSize(0),
-                                )
+                    if (showAccountColorIndicator) {
+                        drawOutline(
+                            outline = when (shape) {
+                                is RoundedCornerShape -> shape
+                                    .copy(
+                                        topEnd = CornerSize(0),
+                                        bottomEnd = CornerSize(0),
+                                    )
 
-                            else -> shape
-                        }.createOutline(
-                            size = size.copy(width = size.width * 0.02f),
-                            layoutDirection = layoutDirection,
-                            density = density,
-                        ),
-                        color = account.color.copy(alpha = 0.5f).toHarmonizedColor(containerColor),
-                    )
+                                else -> shape
+                            }.createOutline(
+                                size = size.copy(width = size.width * 0.02f),
+                                layoutDirection = layoutDirection,
+                                density = density,
+                            ),
+                            color = account
+                                .color
+                                .copy(alpha = 0.5f)
+                                .compositeOver(containerColor),
+                        )
+                    }
                 }
             },
         onClick = onClick,
@@ -292,6 +298,7 @@ fun Avatar(
             author.avatarUrl.isNullOrBlank() ->
                 TextTitleMedium(
                     text = author.email.first().uppercase(),
+                    color = contentColorFor(author.color)
                 )
 
             else -> RemoteImage(

@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.movableContentOf
@@ -103,10 +104,14 @@ internal fun MessageList(
         drawerViewModel = koinViewModel<DrawerContract.ViewModel>(),
         modifier = modifier,
         drawerState = drawerState,
-        onOpenAccount = { },
+        onOpenAccount = { accountId ->
+            dispatchEvent(
+                MessageListContract.Event.OnOpenAccountClick(accountId),
+            )
+        },
         onOpenFolder = { accountId, folderId ->
             dispatchEvent(
-                MessageListContract.Event.LoadFolderMessage(
+                MessageListContract.Event.OnOpenFolderClick(
                     accountId,
                     folderId,
                 ),
@@ -116,6 +121,7 @@ internal fun MessageList(
         onOpenManageFolders = { },
         onOpenNewMessageList = { },
         onOpenSettings = { },
+        onOpenAddAccount = { },
         onCloseDrawer = { },
     )
 }
@@ -141,6 +147,7 @@ private fun MessageList(
     onOpenManageFolders: () -> Unit = {},
     onOpenNewMessageList: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
+    onOpenAddAccount: () -> Unit = {},
     onCloseDrawer: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
@@ -164,6 +171,11 @@ private fun MessageList(
         }
     }
 
+    LaunchedEffect(state.drawerState.selectedAccountUuid, state.drawerState.selectedFolderId) {
+        // scroll to top whenever the selected account or folder changed.
+        lazyListState.animateScrollToItem(0)
+    }
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -175,6 +187,7 @@ private fun MessageList(
                 openManageFolders = onOpenManageFolders,
                 openNewMessageList = onOpenNewMessageList,
                 openSettings = onOpenSettings,
+                openAddAccount = onOpenAddAccount,
                 closeDrawer = onCloseDrawer,
                 featureFlagProvider = featureFlagProvider,
                 viewModel = drawerViewModel,
@@ -348,7 +361,10 @@ private fun MessageList(
                             },
                             read = message.read,
                             favourite = message.starred,
-                            modifier = Modifier.padding(vertical = 1.dp),
+                            showAccountColorIndicator = state.showAccountColorIndicator,
+                            modifier = Modifier
+                                .padding(vertical = 1.dp)
+                                .animateItem(),
                         )
                     }
 

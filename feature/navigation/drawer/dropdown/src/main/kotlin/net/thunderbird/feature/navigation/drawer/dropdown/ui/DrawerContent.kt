@@ -149,6 +149,7 @@ private fun FolderContent(
             FolderSettingList(
                 onManageFoldersClick = { onEvent(Event.OnManageFoldersClick) },
                 onSettingsClick = { onEvent(Event.OnSettingsClick) },
+                onNewMessageListClick = { onEvent(Event.OnNewMessageListClick) },
                 isUnifiedAccount = isUnifiedAccount,
             )
         }

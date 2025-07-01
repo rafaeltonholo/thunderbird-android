@@ -11,6 +11,7 @@ internal fun SettingListPreview() {
         FolderSettingList(
             onManageFoldersClick = {},
             onSettingsClick = {},
+            onNewMessageListClick = {},
             isUnifiedAccount = false,
         )
     }
@@ -23,6 +24,7 @@ internal fun SettingListWithUnifiedAccountPreview() {
         FolderSettingList(
             onManageFoldersClick = {},
             onSettingsClick = {},
+            onNewMessageListClick = {},
             isUnifiedAccount = true,
         )
     }

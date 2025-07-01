@@ -19,15 +19,18 @@ interface MessageListContract {
         val accountName: String? = null,
         val drawerState: FolderDrawerState = FolderDrawerState(),
         val groups: ImmutableList<MessageGroup> = persistentListOf(),
+        val showAccountColorIndicator: Boolean = true,
         val isLoading: Boolean = true,
     )
+
     sealed interface Event {
         data object LoadMore : Event
         data class OnSwipeLeft(val message: Message, val swipeAction: SwipeAction) : Event
         data class OnSwipeRight(val message: Message, val swipeAction: SwipeAction) : Event
         data class OnFavoriteClick(val message: Message) : Event
+        data class OnOpenAccountClick(val accountUuid: String) : Event
 
-        data class LoadFolderMessage(val accountId: String, val folderId: Long) : Event
+        data class OnOpenFolderClick(val accountId: String, val folderId: Long) : Event
     }
 
     sealed interface Effect {

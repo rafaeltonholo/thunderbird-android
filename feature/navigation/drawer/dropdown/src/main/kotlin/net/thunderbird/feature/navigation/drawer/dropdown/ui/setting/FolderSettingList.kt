@@ -13,6 +13,7 @@ import net.thunderbird.feature.navigation.drawer.dropdown.R
 internal fun FolderSettingList(
     onManageFoldersClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onNewMessageListClick: () -> Unit,
     isUnifiedAccount: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -29,6 +30,13 @@ internal fun FolderSettingList(
                     icon = Icons.Outlined.FolderManaged,
                 )
             }
+        }
+        item {
+            SettingListItem(
+                label = "New Message List",
+                onClick = onNewMessageListClick,
+                icon = Icons.Outlined.Mail,
+            )
         }
         item {
             SettingListItem(

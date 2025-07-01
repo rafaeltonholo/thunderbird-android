@@ -11,6 +11,7 @@ internal fun SideRailSettingListPreview() {
         SideRailSettingList(
             onAccountSelectorClick = {},
             onManageFoldersClick = {},
+            onNewMessageListClick = {},
             showAccountSelector = false,
         )
     }
@@ -23,6 +24,7 @@ internal fun SideRailSettingListShowAccountSelectorPreview() {
         SideRailSettingList(
             onAccountSelectorClick = {},
             onManageFoldersClick = {},
+            onNewMessageListClick = {},
             showAccountSelector = true,
         )
     }

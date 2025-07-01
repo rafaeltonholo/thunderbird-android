@@ -18,6 +18,7 @@ import net.thunderbird.feature.navigation.drawer.dropdown.ui.setting.SettingList
 internal fun SideRailSettingList(
     onAccountSelectorClick: () -> Unit,
     onManageFoldersClick: () -> Unit,
+    onNewMessageListClick: () -> Unit,
     showAccountSelector: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -27,6 +28,11 @@ internal fun SideRailSettingList(
             .windowInsetsPadding(WindowInsets.navigationBars)
             .fillMaxWidth(),
     ) {
+        SettingListItem(
+            label = "New Message List",
+            onClick = onNewMessageListClick,
+            icon = Icons.Outlined.Mail,
+        )
         SettingListItem(
             label = stringResource(R.string.navigation_drawer_dropdown_action_manage_folders),
             onClick = onManageFoldersClick,

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import app.k9mail.legacy.mailstore.MessageDetailsAccessor
 import app.k9mail.legacy.mailstore.MessageListRepository
 import app.k9mail.legacy.mailstore.MessageMapper
+import com.fsck.k9.mail.Address
 import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.collections.immutable.toImmutableMap
@@ -40,6 +41,8 @@ import net.thunderbird.feature.mail.message.list.domain.model.Message
 import net.thunderbird.feature.mail.message.list.domain.model.MessageGroup
 import net.thunderbird.feature.mail.message.list.domain.model.MessageIdentity
 import net.thunderbird.feature.mail.message.list.domain.model.UserAccount
+import net.thunderbird.feature.navigation.drawer.dropdown.domain.entity.UnifiedDisplayAccount
+import net.thunderbird.feature.navigation.drawer.dropdown.domain.entity.createMailDisplayAccountFolderId
 import net.thunderbird.feature.search.LocalMessageSearch
 import net.thunderbird.feature.search.SearchAccount
 import net.thunderbird.feature.search.sql.SqlWhereClause
@@ -62,6 +65,46 @@ internal class MessageListViewModel(
 ) {
 
     init {
+        fetchUnifiedInbox()
+    }
+
+    override fun event(event: MessageListContract.Event) {
+        when (event) {
+            MessageListContract.Event.LoadMore -> TODO()
+            is MessageListContract.Event.OnFavoriteClick -> TODO()
+            is MessageListContract.Event.OnOpenFolderClick -> onFolderClick(event)
+            is MessageListContract.Event.OnSwipeLeft -> TODO()
+            is MessageListContract.Event.OnSwipeRight -> TODO()
+            is MessageListContract.Event.OnOpenAccountClick -> onOpenAccountClick(event)
+        }
+    }
+
+    private fun onFolderClick(event: MessageListContract.Event.OnOpenFolderClick) {
+        fetchMessages(
+            accountUuid = event.accountId,
+            folderId = event.folderId,
+        )
+        emitEffect(MessageListContract.Effect.CloseDrawer)
+    }
+
+    private fun onOpenAccountClick(event: MessageListContract.Event.OnOpenAccountClick) {
+        logger.debug(TAG) { "onOpenAccountClick() called with: event = $event" }
+        val accountUuid = event.accountUuid
+        updateState { state ->
+            state.copy(
+                drawerState = state.drawerState.copy(
+                    selectedAccountUuid = accountUuid,
+                ),
+            )
+        }
+
+        when (accountUuid) {
+            UnifiedDisplayAccount.UNIFIED_ACCOUNT_ID -> fetchUnifiedInbox()
+            else -> fetchMessages(accountUuid = accountUuid, folderId = 2) // 2 = Inbox
+        }
+    }
+
+    private fun fetchUnifiedInbox() {
         viewModelScope.launch {
             updateState { it.copy(isLoading = true) }
             fetchAccounts()
@@ -70,7 +113,12 @@ internal class MessageListViewModel(
                     when (accounts.size) {
                         1 -> {
                             val account = accounts.first()
-                            updateState { it.copy(accountName = account.name ?: account.email) }
+                            updateState {
+                                it.copy(
+                                    accountName = account.name ?: account.email,
+                                    showAccountColorIndicator = false,
+                                )
+                            }
                         }
 
                         else -> updateState { it.copy(accountName = "Unified Account") }
@@ -126,23 +174,6 @@ internal class MessageListViewModel(
                 }
                 .flowOn(mainImmediateDispatcher)
                 .launchIn(viewModelScope)
-        }
-    }
-
-    override fun event(event: MessageListContract.Event) {
-        when (event) {
-            is MessageListContract.Event.LoadFolderMessage -> {
-                fetchMessages(
-                    accountUuid = event.accountId,
-                    folderId = event.folderId,
-                )
-                emitEffect(MessageListContract.Effect.CloseDrawer)
-            }
-
-            MessageListContract.Event.LoadMore -> TODO()
-            is MessageListContract.Event.OnFavoriteClick -> TODO()
-            is MessageListContract.Event.OnSwipeLeft -> TODO()
-            is MessageListContract.Event.OnSwipeRight -> TODO()
         }
     }
 
@@ -222,6 +253,10 @@ internal class MessageListViewModel(
                         accountName = account.name,
                         folderName = folder?.name,
                         groups = groups.toPersistentList(),
+                        drawerState = state.drawerState.copy(
+                            selectedFolderId = createMailDisplayAccountFolderId(account.uuid, folderId),
+                        ),
+                        showAccountColorIndicator = false,
                     )
                 }
             }
@@ -265,6 +300,7 @@ internal class UiMessageMapper(
     private val account: BaseAccount,
     private val profile: AccountProfile?,
 ) : MessageMapper<Message> {
+    private val addressColors = mutableMapOf<String, Color>()
     override fun map(message: MessageDetailsAccessor): Message {
         logger.debug(TAG) { "map() called with: message = $message" }
         return Message(
@@ -282,14 +318,14 @@ internal class UiMessageMapper(
             from = message.fromAddresses.map { address ->
                 MessageIdentity(
                     email = address.address,
-                    color = Color(Random.nextLong(0xFF000000, 0xFFFFFFFF)), // TODO.
+                    color = address.color,
                     avatarUrl = null,
                 )
             }.toPersistentList(),
             recipients = message.toAddresses.map { address ->
                 MessageIdentity(
                     email = address.address,
-                    color = Color(Random.nextLong(0xFF000000, 0xFFFFFFFF)), // TODO.
+                    color = address.color,
                     avatarUrl = null,
                 )
             }.toPersistentList(),
@@ -304,6 +340,12 @@ internal class UiMessageMapper(
             //        ).firstNotNullOf { it.value },
         ).also {
             logger.debug(TAG) { "map() mapped message to: $it" }
+        }
+    }
+
+    private val Address.color: Color get() {
+        return addressColors.getOrPut(address) {
+            Color(Random.nextLong(0xFF000000, 0xFFFFFFFF))
         }
     }
 
