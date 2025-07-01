@@ -17,13 +17,15 @@ import net.thunderbird.core.android.account.LegacyAccount
 import net.thunderbird.feature.mail.folder.api.Folder
 import net.thunderbird.feature.mail.folder.api.FolderDetails
 import net.thunderbird.feature.mail.folder.api.RemoteFolder
+import net.thunderbird.feature.mail.folder.api.domain.repository.LocalFolderRepository
 
 @Suppress("TooManyFunctions")
 class FolderRepository(
     private val messageStoreManager: MessageStoreManager,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-) {
-    fun getFolder(account: LegacyAccount, folderId: Long): Folder? {
+) : LocalFolderRepository<LegacyAccount> {
+    @Deprecated("Use getLocalFolder instead", replaceWith = ReplaceWith("getLocalFolder(account, folderId)"))
+    override fun getFolder(account: LegacyAccount, folderId: Long): Folder? {
         val messageStore = messageStoreManager.getMessageStore(account)
         return messageStore.getFolder(folderId) { folder ->
             Folder(
@@ -35,7 +37,11 @@ class FolderRepository(
         }
     }
 
-    fun getFolderDetails(account: LegacyAccount, folderId: Long): FolderDetails? {
+    @Deprecated(
+        "Use getLocalFolderDetails instead",
+        replaceWith = ReplaceWith("getLocalFolderDetails(account, folderId)"),
+    )
+    override fun getFolderDetails(account: LegacyAccount, folderId: Long): FolderDetails? {
         val messageStore = messageStoreManager.getMessageStore(account)
         return messageStore.getFolder(folderId) { folder ->
             FolderDetails(
@@ -125,7 +131,8 @@ class FolderRepository(
         }
     }
 
-    fun getFolderId(account: LegacyAccount, folderServerId: String): Long? {
+    @Deprecated("Use getLocalFolderId instead", replaceWith = ReplaceWith("getLocalFolderId(account, folderServerId)"))
+    override fun getFolderId(account: LegacyAccount, folderServerId: String): Long? {
         val messageStore = messageStoreManager.getMessageStore(account)
         return messageStore.getFolderId(folderServerId)
     }

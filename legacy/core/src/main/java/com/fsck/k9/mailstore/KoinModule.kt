@@ -8,6 +8,7 @@ import com.fsck.k9.message.extractors.MessageFulltextCreator
 import com.fsck.k9.message.extractors.MessagePreviewCreator
 import net.thunderbird.backend.api.BackendStorageFactory
 import net.thunderbird.feature.mail.folder.api.SpecialFolderUpdater
+import net.thunderbird.feature.mail.folder.api.domain.repository.LocalFolderRepository
 import org.koin.dsl.module
 
 val mailStoreModule = module {
@@ -16,6 +17,7 @@ val mailStoreModule = module {
             messageStoreManager = get(),
         )
     }
+    single<LocalFolderRepository<*>> { get<FolderRepository>() }
     single { MessageViewInfoExtractorFactory(get(), get(), get()) }
     single<StorageFilesProviderFactory> { AndroidStorageFilesProviderFactory(context = get()) }
     single { SpecialFolderSelectionStrategy() }
