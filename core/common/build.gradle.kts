@@ -1,5 +1,6 @@
 plugins {
     id(ThunderbirdPlugins.Library.kmp)
+    alias(libs.plugins.kotlin.parcelize)
 }
 
 android {
@@ -25,6 +26,9 @@ kotlin {
         freeCompilerArgs.addAll(
             listOf(
                 "-Xexpect-actual-classes",
+                "-P",
+                "plugin:org.jetbrains.kotlin.parcelize:additionalAnnotation=" +
+                    "net.thunderbird.core.common.io.KmpParcelize",
             ),
         )
     }
