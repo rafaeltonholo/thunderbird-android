@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import app.k9mail.legacy.mailstore.MessageDetailsAccessor
 import app.k9mail.legacy.mailstore.MessageListRepository
 import app.k9mail.legacy.mailstore.MessageMapper
+import app.k9mail.legacy.message.extractors.PreviewResult
 import com.fsck.k9.mail.Address
 import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
@@ -311,7 +312,12 @@ internal class UiMessageMapper(
                 color = profile?.color?.let(::Color) ?: Color.Transparent,
             ),
             subject = message.subject ?: "No subject",
-            contentPreview = message.preview.previewText,
+            contentPreview = when(message.preview.previewType) {
+                PreviewResult.PreviewType.NONE -> ""
+                PreviewResult.PreviewType.TEXT -> message.preview.previewText
+                PreviewResult.PreviewType.ENCRYPTED -> "* Encrypted *"
+                PreviewResult.PreviewType.ERROR -> "Error"
+            },
             dateTime = Instant
                 .fromEpochMilliseconds(message.messageDate)
                 .toLocalDateTime(TimeZone.currentSystemDefault()),
