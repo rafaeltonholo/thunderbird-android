@@ -8,6 +8,8 @@ import app.k9mail.legacy.mailstore.MessageMapper
 import app.k9mail.legacy.message.extractors.PreviewResult
 import com.fsck.k9.mail.Address
 import kotlin.random.Random
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.collections.immutable.toPersistentList
@@ -25,7 +27,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import net.thunderbird.core.common.resources.StringsResourceManager
@@ -44,9 +45,9 @@ import net.thunderbird.feature.mail.message.list.domain.model.MessageIdentity
 import net.thunderbird.feature.mail.message.list.domain.model.UserAccount
 import net.thunderbird.feature.navigation.drawer.dropdown.domain.entity.UnifiedDisplayAccount
 import net.thunderbird.feature.navigation.drawer.dropdown.domain.entity.createMailDisplayAccountFolderId
-import net.thunderbird.feature.search.LocalMessageSearch
-import net.thunderbird.feature.search.SearchAccount
-import net.thunderbird.feature.search.sql.SqlWhereClause
+import net.thunderbird.feature.search.legacy.LocalMessageSearch
+import net.thunderbird.feature.search.legacy.SearchAccount
+import net.thunderbird.feature.search.legacy.sql.SqlWhereClause
 
 private const val TAG = "MessageListViewModel"
 
@@ -312,13 +313,15 @@ internal class UiMessageMapper(
                 color = profile?.color?.let(::Color) ?: Color.Transparent,
             ),
             subject = message.subject ?: "No subject",
-            contentPreview = when(message.preview.previewType) {
+            contentPreview = when (message.preview.previewType) {
                 PreviewResult.PreviewType.NONE -> ""
                 PreviewResult.PreviewType.TEXT -> message.preview.previewText
                 PreviewResult.PreviewType.ENCRYPTED -> "* Encrypted *"
                 PreviewResult.PreviewType.ERROR -> "Error"
             },
-            dateTime = Instant
+            dateTime =
+            @OptIn(ExperimentalTime::class)
+            Instant
                 .fromEpochMilliseconds(message.messageDate)
                 .toLocalDateTime(TimeZone.currentSystemDefault()),
             from = message.fromAddresses.map { address ->
@@ -349,11 +352,12 @@ internal class UiMessageMapper(
         }
     }
 
-    private val Address.color: Color get() {
-        return addressColors.getOrPut(address) {
-            Color(Random.nextLong(0xFF000000, 0xFFFFFFFF))
+    private val Address.color: Color
+        get() {
+            return addressColors.getOrPut(address) {
+                Color(Random.nextLong(from = 0xFF000000, until = 0xFFFFFFFF))
+            }
         }
-    }
 
     class Factory(
         private val logger: Logger,

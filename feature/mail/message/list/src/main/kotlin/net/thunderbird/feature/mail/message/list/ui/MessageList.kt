@@ -54,16 +54,18 @@ import app.k9mail.core.ui.compose.theme2.thunderbird.ThunderbirdTheme2
 import io.github.serpro69.kfaker.Faker
 import kotlin.random.Random
 import kotlin.random.nextLong
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format.MonthNames
+import kotlinx.datetime.format.Padding
 import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
 import net.thunderbird.core.featureflag.FeatureFlagProvider
@@ -96,7 +98,6 @@ internal fun MessageList(
             }
         }
     }
-
 
     MessageList(
         state = state.value,
@@ -133,6 +134,7 @@ data class MessageListToolbarState(
     val isAccountNameVisible: Boolean,
 )
 
+@Suppress("ViewModelForwarding")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 private fun MessageList(
@@ -161,7 +163,6 @@ private fun MessageList(
                 isFolderNameVisible = visibleItemsInfo.fastAny { it.key == LAZY_COLUMN_KEY_FOLDER_NAME },
                 isAccountNameVisible = visibleItemsInfo.fastAny { it.key == LAZY_COLUMN_KEY_FOLDER_NAME },
             )
-
         }
     }
 
@@ -228,7 +229,9 @@ private fun MessageList(
                                                         .align(Alignment.Center)
                                                         .offset(x = (-24).dp)
                                                         .sharedBounds(
-                                                            sharedContentState = rememberSharedContentState(key = "toolbar_title"),
+                                                            sharedContentState = rememberSharedContentState(
+                                                                key = "toolbar_title",
+                                                            ),
                                                             animatedVisibilityScope = this@AnimatedContent,
                                                         ),
                                                 )
@@ -238,7 +241,9 @@ private fun MessageList(
                                                     TextTitleLarge(
                                                         text = state.folderName.orEmpty(),
                                                         modifier = Modifier.sharedBounds(
-                                                            sharedContentState = rememberSharedContentState(key = "toolbar_title"),
+                                                            sharedContentState = rememberSharedContentState(
+                                                                key = "toolbar_title",
+                                                            ),
                                                             animatedVisibilityScope = this@AnimatedContent,
                                                         ),
                                                     )
@@ -266,7 +271,6 @@ private fun MessageList(
                 contentPadding = PaddingValues(MainTheme.spacings.double),
                 state = lazyListState,
             ) {
-
                 item(key = LAZY_COLUMN_KEY_FOLDER_NAME) {
                     AnimatedVisibility(
                         visible = toolbarState.shouldShowFolderName,
@@ -276,7 +280,7 @@ private fun MessageList(
                                 .folderName
                                 .orEmpty(),
 
-                            )
+                        )
                     }
                 }
 
@@ -318,7 +322,7 @@ private fun MessageList(
                             LocalDate.Format {
                                 monthName(MonthNames.ENGLISH_ABBREVIATED)
                                 char(' ')
-                                dayOfMonth()
+                                day(padding = Padding.ZERO)
                             }
                         }
                         val period = remember(group.date) {
@@ -385,6 +389,7 @@ private fun MessageList(
     }
 }
 
+@OptIn(ExperimentalTime::class)
 @PreviewLightDark
 @Composable
 private fun Preview() {

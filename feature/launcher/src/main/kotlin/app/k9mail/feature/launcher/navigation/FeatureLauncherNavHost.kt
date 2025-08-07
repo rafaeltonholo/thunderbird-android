@@ -14,8 +14,8 @@ import app.k9mail.feature.launcher.FeatureLauncherExternalContract.AccountSetupF
 import app.k9mail.feature.onboarding.main.navigation.OnboardingNavigation
 import app.k9mail.feature.onboarding.main.navigation.OnboardingRoute
 import net.thunderbird.feature.account.settings.api.AccountSettingsNavigation
-import net.thunderbird.feature.mail.message.list.navigation.MessageListNavigation
 import net.thunderbird.feature.debug.settings.navigation.SecretDebugSettingsNavigation
+import net.thunderbird.feature.mail.message.list.navigation.MessageListNavigation
 import org.koin.compose.koinInject
 
 @Composable

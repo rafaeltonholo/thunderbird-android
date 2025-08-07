@@ -46,14 +46,13 @@ import app.k9mail.core.ui.compose.designsystem.atom.text.TextTitleMedium
 import app.k9mail.core.ui.compose.designsystem.atom.text.TextTitleSmall
 import app.k9mail.core.ui.compose.theme2.MainTheme
 import app.k9mail.core.ui.compose.theme2.thunderbird.ThunderbirdTheme2
-import app.k9mail.core.ui.compose.theme2.toHarmonizedColor
 import io.github.serpro69.kfaker.Faker
 import kotlin.random.Random
+import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
@@ -65,6 +64,9 @@ import net.thunderbird.feature.mail.message.list.domain.model.MessageIdentity
 import net.thunderbird.feature.mail.message.list.domain.model.UserAccount
 
 private const val MAX_DISPLAYABLE_ATTACHMENTS = 2
+
+private const val HALF_ALPHA = 0.5f
+private const val FULL_ALPHA = 1f
 
 @Composable
 fun MessageItem(
@@ -85,7 +87,7 @@ fun MessageItem(
     onFavouriteClick: () -> Unit = {},
 ) {
     val containerColor = if (read) MainTheme.colors.surfaceContainerHighest else MainTheme.colors.surfaceContainerLow
-    val readAlfa = if (read) 0.5f else 1f
+    val readAlfa = if (read) HALF_ALPHA else FULL_ALPHA
     val textColor = MainTheme.colors.onSurface.copy(alpha = readAlfa)
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
@@ -97,11 +99,12 @@ fun MessageItem(
                     if (showAccountColorIndicator) {
                         drawOutline(
                             outline = when (shape) {
-                                is RoundedCornerShape -> shape
-                                    .copy(
-                                        topEnd = CornerSize(0),
-                                        bottomEnd = CornerSize(0),
-                                    )
+                                is RoundedCornerShape ->
+                                    shape
+                                        .copy(
+                                            topEnd = CornerSize(0),
+                                            bottomEnd = CornerSize(0),
+                                        )
 
                                 else -> shape
                             }.createOutline(
@@ -111,7 +114,7 @@ fun MessageItem(
                             ),
                             color = account
                                 .color
-                                .copy(alpha = 0.5f)
+                                .copy(alpha = HALF_ALPHA)
                                 .compositeOver(containerColor),
                         )
                     }
@@ -144,7 +147,7 @@ fun MessageItem(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(MainTheme.spacings.half),
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(FULL_ALPHA),
                     ) {
                         if (important) {
                             Icon(
@@ -164,6 +167,7 @@ fun MessageItem(
                     }
                     val formatter = remember {
                         LocalDateTime.Format {
+                            @OptIn(ExperimentalTime::class)
                             val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
                             if (today == dateTime.date) {
                                 hour()
@@ -185,7 +189,7 @@ fun MessageItem(
                 ) {
                     Column(
                         modifier = Modifier
-                            .weight(1f)
+                            .weight(FULL_ALPHA)
                             .fillMaxSize(),
                     ) {
                         TextTitleSmall(
@@ -298,7 +302,7 @@ fun Avatar(
             author.avatarUrl.isNullOrBlank() ->
                 TextTitleMedium(
                     text = author.email.first().uppercase(),
-                    color = contentColorFor(author.color)
+                    color = contentColorFor(author.color),
                 )
 
             else -> RemoteImage(
@@ -332,7 +336,7 @@ private class PreviewParamsCollection : CollectionPreviewParameterProvider<Previ
                 PreviewParam(
                     subject = "That is a nice email",
                     contentPreview = "The message's content preview",
-                    date = Clock.System.now().toLocalDateTime(TimeZone.UTC),
+                    date = @OptIn(ExperimentalTime::class) Clock.System.now().toLocalDateTime(TimeZone.UTC),
                     from = persistentListOf(
                         MessageIdentity(
                             email = "rafael@tonholo.com",
@@ -351,7 +355,7 @@ private class PreviewParamsCollection : CollectionPreviewParameterProvider<Previ
                 PreviewParam(
                     subject = "That is a nice email",
                     contentPreview = "The message's content preview",
-                    date = Clock.System.now().toLocalDateTime(TimeZone.UTC),
+                    date = @OptIn(ExperimentalTime::class) Clock.System.now().toLocalDateTime(TimeZone.UTC),
                     from = persistentListOf(
                         MessageIdentity(
                             email = "rafael@tonholo.com",
@@ -403,7 +407,7 @@ private class PreviewParamsCollection : CollectionPreviewParameterProvider<Previ
                     type = MessageAttachment.Type.entries.random(),
                 ),
                 MessageAttachment(
-                    name = "Long ".repeat(10),
+                    name = "Long ".repeat(n = 10),
                     type = MessageAttachment.Type.entries.random(),
                 ),
             ),
@@ -426,7 +430,7 @@ private class PreviewParamsCollection : CollectionPreviewParameterProvider<Previ
             threadCount = 0,
             attachments = List(size = 10) {
                 MessageAttachment(
-                    name = "Long ".repeat(10 + it) + "Attachment",
+                    name = "Long ".repeat(n = 10 + it) + "Attachment",
                     type = MessageAttachment.Type.entries.random(),
                 )
             }.toPersistentList(),
@@ -438,7 +442,7 @@ private class PreviewParamsCollection : CollectionPreviewParameterProvider<Previ
             threadCount = 0,
             attachments = List(size = 100) {
                 MessageAttachment(
-                    name = "Long ".repeat(10 + it) + "Attachment",
+                    name = "Long ".repeat(n = 10 + it) + "Attachment",
                     type = MessageAttachment.Type.entries.random(),
                 )
             }.toPersistentList(),
@@ -450,7 +454,7 @@ private class PreviewParamsCollection : CollectionPreviewParameterProvider<Previ
             threadCount = 0,
             attachments = List(size = 1000) {
                 MessageAttachment(
-                    name = "Long ".repeat(10 + it) + "Attachment",
+                    name = "Long ".repeat(n = 10 + it) + "Attachment",
                     type = MessageAttachment.Type.entries.random(),
                 )
             }.toPersistentList(),
@@ -462,7 +466,7 @@ private class PreviewParamsCollection : CollectionPreviewParameterProvider<Previ
             threadCount = 0,
             attachments = List(size = 10000) {
                 MessageAttachment(
-                    name = "Long ".repeat(10 + it) + "Attachment",
+                    name = "Long ".repeat(n = 10 + it) + "Attachment",
                     type = MessageAttachment.Type.entries.random(),
                 )
             }.toPersistentList(),

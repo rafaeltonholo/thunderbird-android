@@ -2,7 +2,6 @@ package net.thunderbird.feature.navigation.drawer.dropdown.ui
 
 import androidx.compose.runtime.Stable
 import app.k9mail.core.ui.compose.common.mvi.BaseViewModel
-import app.k9mail.core.ui.compose.common.mvi.UnidirectionalViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import net.thunderbird.feature.navigation.drawer.api.NavigationDrawerExternalContract.DrawerConfig

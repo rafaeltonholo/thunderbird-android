@@ -1,5 +1,6 @@
 package app.k9mail.legacy.message.extractors
 
+@Suppress("ConstructorParameterNaming")
 class PreviewResult private constructor(
     val previewType: PreviewType,
     private val _previewText: String?,
@@ -19,7 +20,7 @@ class PreviewResult private constructor(
         NONE,
         TEXT,
         ENCRYPTED,
-        ERROR
+        ERROR,
     }
 
     companion object {

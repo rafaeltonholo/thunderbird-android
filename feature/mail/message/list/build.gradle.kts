@@ -32,7 +32,7 @@ dependencies {
     implementation(projects.feature.mail.account.api)
     implementation(projects.feature.mail.folder.api)
     implementation(projects.feature.navigation.drawer.dropdown)
-    implementation(projects.feature.search)
+    implementation(projects.feature.search.implLegacy)
     implementation(projects.legacy.mailstore)
     implementation(projects.mail.common)
 }
