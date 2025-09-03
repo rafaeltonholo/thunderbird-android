@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOn
 import net.thunderbird.core.android.account.AccountManager
 import net.thunderbird.core.android.account.LegacyAccount
@@ -86,7 +87,7 @@ class DefaultDisplayFolderRepository(
     }
 
     override fun getDisplayFoldersFlow(accountUuid: String): Flow<List<DisplayFolder>> {
-        val account = accountManager.getAccount(accountUuid) ?: error("Account not found: $accountUuid")
+        val account = accountManager.getAccount(accountUuid) ?: return emptyFlow()
         return getDisplayFoldersFlow(account, includeHiddenFolders = false)
     }
 }
