@@ -57,7 +57,7 @@ class MessageListStateMachine(
         }
         warmingUpInitialState(initialState = MessageListState.WarmingUp(), dispatch)
         globalState()
-        loadingMessagesState()
+        loadingMessagesState(dispatch)
         loadedMessagesState()
         selectingMessagesState()
         searchingMessagesState()
