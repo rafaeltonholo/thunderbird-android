@@ -7,18 +7,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.k9mail.core.ui.compose.designsystem.atom.text.TextBodySmall
-import app.k9mail.core.ui.compose.theme2.LocalContentColor
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableMap
@@ -43,8 +43,6 @@ import net.thunderbird.feature.mail.message.list.ui.component.organism.MessageIt
  * @param configuration The configuration that controls the appearance and behavior of the message
  *  item, including the maximum number of excerpt lines and line-specific configurations.
  * @param modifier The modifier to be applied to the root Row layout.
- * @param colors The color scheme to use for the message item content, including subject color.
- *  Defaults to read message item colors.
  * @param subject A composable lambda that renders the subject line, receiving an optional
  *  [AnnotatedString] for prefix content and a map of inline text content for rendering icons or
  *  badges within the text.
@@ -54,7 +52,6 @@ internal fun MessageBodyContent(
     excerpt: String,
     configuration: MessageItemConfiguration,
     modifier: Modifier = Modifier,
-    colors: MessageItemColors = MessageItemDefaults.readMessageItemColors(),
     subject: @Composable (AnnotatedString?, ImmutableMap<String, InlineTextContent>) -> Unit,
 ) {
     Row(modifier = modifier) {
@@ -111,8 +108,6 @@ private fun rememberPrefixAnnotatedString(
                     )
                     append(" ")
                 }
-
-                else -> Unit
             }
         }
     }
@@ -120,10 +115,11 @@ private fun rememberPrefixAnnotatedString(
 
 @Composable
 private fun rememberInlineContent(configuration: MessageSublineConfiguration): ImmutableMap<String, InlineTextContent> {
+    val badgeHeight = calculateBadgeHeight()
     return remember(configuration) {
         configuration
             .leadingItems
-            .mapNotNull { leadingItem ->
+            .associate { leadingItem ->
                 when (leadingItem) {
                     is MessageSublineLeadingIndicator.AttachmentIcon ->
                         MessageItemDefaults.ATTACHMENT_ICON_INLINE_COMPOSABLE_ID to InlineTextContent(
@@ -140,19 +136,25 @@ private fun rememberInlineContent(configuration: MessageSublineConfiguration): I
                         MessageItemDefaults.CONVERSATION_COUNTER_INLINE_COMPOSABLE_ID to InlineTextContent(
                             Placeholder(
                                 width = calculateConversationCounterBadgeWidth(leadingItem.count),
-                                height = 16.sp,
+                                height = badgeHeight,
                                 placeholderVerticalAlign = PlaceholderVerticalAlign.Center,
                             ),
                         ) {
                             MessageConversationCounterBadge(leadingItem.count, leadingItem.color)
                         }
-
-                    else -> null
                 }
             }
-            .toMap()
             .toImmutableMap()
     }
+}
+
+@Composable
+private fun calculateBadgeHeight(): TextUnit {
+    val fontSize = MainTheme.typography.bodySmall.fontSize
+    val badgeHeight = with(LocalDensity.current) {
+        (fontSize.toDp() + (MESSAGE_CONVERSATION_COUNTER_BADGE_PADDING.dp * 2)).toSp()
+    }
+    return badgeHeight
 }
 
 private const val TEN_QUANTITY = 10

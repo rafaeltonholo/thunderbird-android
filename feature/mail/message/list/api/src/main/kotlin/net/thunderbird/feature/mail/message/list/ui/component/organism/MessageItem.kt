@@ -115,7 +115,6 @@ internal fun MessageItem(
             ) {
                 AdaptiveHeaderRow(configuration, receivedAt, firstLine)
                 MessageBodyContent(
-                    colors = colors,
                     excerpt = excerpt,
                     configuration = configuration,
                     subject = secondaryLine,
