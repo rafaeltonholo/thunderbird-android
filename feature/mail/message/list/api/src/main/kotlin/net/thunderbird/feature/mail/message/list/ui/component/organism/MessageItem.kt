@@ -8,11 +8,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -21,8 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.movableContentOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -33,32 +28,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import app.k9mail.core.ui.compose.common.window.WindowSizeClass
-import app.k9mail.core.ui.compose.common.window.getWindowSizeInfo
 import app.k9mail.core.ui.compose.designsystem.atom.Surface
 import app.k9mail.core.ui.compose.designsystem.atom.button.ButtonIcon
 import app.k9mail.core.ui.compose.designsystem.atom.button.ButtonIconDefaults
-import app.k9mail.core.ui.compose.designsystem.atom.text.TextTitleSmall
-import app.k9mail.core.ui.compose.theme2.contentColorFor
 import kotlinx.collections.immutable.ImmutableMap
 import net.thunderbird.core.ui.compose.designsystem.atom.icon.Icon
 import net.thunderbird.core.ui.compose.designsystem.atom.icon.Icons
 import net.thunderbird.core.ui.compose.theme2.MainTheme
+import net.thunderbird.core.ui.compose.theme2.contentColorFor
 import net.thunderbird.feature.mail.message.list.ui.component.atom.FavouriteButtonIcon
 import net.thunderbird.feature.mail.message.list.ui.component.atom.MESSAGE_BADGE_SIZE
 import net.thunderbird.feature.mail.message.list.ui.component.atom.NewMessageBadge
 import net.thunderbird.feature.mail.message.list.ui.component.atom.UnreadMessageBadge
 import net.thunderbird.feature.mail.message.list.ui.component.config.MessageBadgeStyle
-import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemAccountIndicator
 import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemConfiguration
 import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemLeadingConfiguration
 import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemTrailingElement
-import net.thunderbird.feature.mail.message.list.ui.component.molecule.AccountIndicatorIcon
-import net.thunderbird.feature.mail.message.list.ui.component.molecule.HeaderRow
-import net.thunderbird.feature.mail.message.list.ui.component.molecule.HeaderRowSmall
+import net.thunderbird.feature.mail.message.list.ui.component.molecule.AdaptiveMessageItemHeaderRow
 import net.thunderbird.feature.mail.message.list.ui.component.molecule.MessageBodyContent
 import net.thunderbird.feature.mail.message.list.ui.component.molecule.MessageItemAvatarCircle
 import net.thunderbird.feature.mail.message.list.ui.component.molecule.MessageItemAvatarCircleDefaults
@@ -113,7 +101,7 @@ internal fun MessageItem(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(MainTheme.spacings.half),
             ) {
-                AdaptiveHeaderRow(configuration, receivedAt, firstLine)
+                AdaptiveMessageItemHeaderRow(configuration, receivedAt, firstLine)
                 MessageBodyContent(
                     excerpt = excerpt,
                     configuration = configuration,
@@ -166,58 +154,6 @@ private fun Modifier.borderBottom(width: Dp, color: Color): Modifier = this then
     }
 
 @Composable
-private fun rememberAdaptiveHeaderRowContent(
-    isSmallScreen: Boolean,
-    accountIndicator: MessageItemAccountIndicator?,
-    receivedAt: String,
-    firstLine: @Composable (() -> Unit),
-): @Composable ((RowScope) -> Unit) = remember(isSmallScreen, accountIndicator, receivedAt, firstLine) {
-    movableContentOf { scope ->
-        with(scope) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .then(if (isSmallScreen) Modifier.fillMaxWidth() else Modifier.weight(1f))
-                    .defaultMinSize(minHeight = AccountIndicatorIcon.ACCOUNT_INDICATOR_DEFAULT_HEIGHT),
-            ) {
-                val indicatorColor = accountIndicator?.color
-                if (indicatorColor != null) {
-                    AccountIndicatorIcon(indicatorColor)
-                }
-                firstLine()
-            }
-            MessageItemDate(
-                receivedAt = receivedAt,
-                modifier = Modifier.align(Alignment.CenterVertically),
-            )
-        }
-    }
-}
-
-@Composable
-private fun AdaptiveHeaderRow(
-    configuration: MessageItemConfiguration,
-    receivedAt: String,
-    firstLine: @Composable (() -> Unit),
-    modifier: Modifier = Modifier,
-) {
-    val windowSizeInfo = getWindowSizeInfo()
-    val isSmallScreen = windowSizeInfo.screenWidthSizeClass == WindowSizeClass.Small
-
-    val headerRowContent: @Composable ((RowScope) -> Unit) = rememberAdaptiveHeaderRowContent(
-        isSmallScreen = isSmallScreen,
-        accountIndicator = configuration.accountIndicator,
-        receivedAt = receivedAt,
-        firstLine = firstLine,
-    )
-    if (isSmallScreen) {
-        HeaderRowSmall(modifier, headerRowContent = headerRowContent)
-    } else {
-        HeaderRow(modifier, headerRowContent = headerRowContent)
-    }
-}
-
-@Composable
 private fun LeadingElements(
     selected: Boolean,
     configuration: MessageItemLeadingConfiguration,
@@ -264,17 +200,4 @@ private fun LeadingElements(
             }
         }
     }
-}
-
-@Composable
-private fun MessageItemDate(
-    receivedAt: String,
-    modifier: Modifier = Modifier,
-) {
-    TextTitleSmall(
-        text = receivedAt,
-        maxLines = 1,
-        overflow = TextOverflow.Visible,
-        modifier = modifier,
-    )
 }
