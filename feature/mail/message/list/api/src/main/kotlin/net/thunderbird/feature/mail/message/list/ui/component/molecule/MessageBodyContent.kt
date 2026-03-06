@@ -59,10 +59,8 @@ internal fun MessageBodyContent(
 ) {
     Row(modifier = modifier) {
         Column {
-            CompositionLocalProvider(LocalContentColor provides colors.subjectColor) {
-                val (prefixAnnotatedString, inlineContent) = secondaryLineContent(configuration)
-                subject(prefixAnnotatedString, inlineContent)
-            }
+            val (prefixAnnotatedString, inlineContent) = secondaryLineContent(configuration)
+            subject(prefixAnnotatedString, inlineContent)
             Spacer(modifier = Modifier.height(MainTheme.spacings.half))
             if (configuration.maxExcerptLines > 0) {
                 val inlineContent = rememberInlineContent(configuration.excerptLineConfiguration)
