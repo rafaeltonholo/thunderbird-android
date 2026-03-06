@@ -4,6 +4,8 @@ import androidx.compose.ui.graphics.Color
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import net.thunderbird.core.preference.display.visualSettings.message.list.MessageListDateTimeFormat
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageBadgeStyle
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemTrailingElement
 import net.thunderbird.feature.mail.message.list.ui.state.Avatar
 import net.thunderbird.feature.mail.message.list.ui.state.ComposedAddressStyle
 
@@ -23,8 +25,8 @@ internal data class MessageItemPrevParams(
     val avatar: Avatar? = null,
     val avatarColor: Color? = null,
     val accountColor: Color = Color.DarkGray,
-    val trailingElements: ImmutableList<MessageItemTrailingConfiguration.TrailingElement> = persistentListOf(
-        MessageItemTrailingConfiguration.TrailingElement.FavouriteIconButton(
+    val trailingElements: ImmutableList<MessageItemTrailingElement> = persistentListOf(
+        MessageItemTrailingElement.FavouriteIconButton(
             favourite = favourite,
         ),
     ),

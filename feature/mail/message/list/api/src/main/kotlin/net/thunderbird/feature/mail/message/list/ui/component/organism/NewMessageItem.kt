@@ -3,11 +3,13 @@ package net.thunderbird.feature.mail.message.list.ui.component.organism
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import net.thunderbird.feature.mail.message.list.preferences.MessageListPreferences
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemAccountIndicator
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemTrailingElement
+import net.thunderbird.feature.mail.message.list.ui.component.config.rememberMessageItemConfiguration
 import net.thunderbird.feature.mail.message.list.ui.component.molecule.MessageConversationCounterBadgeDefaults
 import net.thunderbird.feature.mail.message.list.ui.component.molecule.MessageItemSenderSubjectFirstLine
 import net.thunderbird.feature.mail.message.list.ui.component.molecule.MessageItemSenderSubjectSecondLine
 import net.thunderbird.feature.mail.message.list.ui.component.organism.MessageItemDefaults.toContentPadding
-import net.thunderbird.feature.mail.message.list.ui.component.organism.MessageItemTrailingConfiguration.TrailingElement
 import net.thunderbird.feature.mail.message.list.ui.state.MessageItemUi
 
 /**
@@ -43,7 +45,7 @@ fun NewMessageItem(
         },
         excerpt = state.excerpt,
         receivedAt = state.formattedReceivedAt,
-        configuration = MessageItemDefaults.rememberConfiguration(
+        configuration = rememberMessageItemConfiguration(
             messageItemUi = state,
             preferences = preferences,
             color = MessageConversationCounterBadgeDefaults.newMessageColor(),
@@ -54,7 +56,7 @@ fun NewMessageItem(
         onAvatarClick = onAvatarClick,
         onTrailingClick = { element ->
             when (element) {
-                is TrailingElement.FavouriteIconButton if preferences.showFavouriteButton ->
+                is MessageItemTrailingElement.FavouriteIconButton if preferences.showFavouriteButton ->
                     onFavouriteChange(element.favourite)
 
                 else -> Unit

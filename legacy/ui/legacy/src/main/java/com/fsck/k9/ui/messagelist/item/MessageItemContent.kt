@@ -13,7 +13,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import net.thunderbird.feature.account.avatar.AvatarMonogramCreator
 import net.thunderbird.feature.mail.message.list.preferences.MessageListPreferences
-import net.thunderbird.feature.mail.message.list.ui.component.organism.MessageItemAccountIndicator
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemAccountIndicator
 import net.thunderbird.feature.mail.message.list.ui.component.organism.ReadMessageItem
 import net.thunderbird.feature.mail.message.list.ui.component.organism.UnreadMessageItem
 import net.thunderbird.feature.mail.message.list.ui.state.Account

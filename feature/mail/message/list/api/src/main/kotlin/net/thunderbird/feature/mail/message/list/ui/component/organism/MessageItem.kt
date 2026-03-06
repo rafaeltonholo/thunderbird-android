@@ -51,6 +51,11 @@ import net.thunderbird.feature.mail.message.list.ui.component.atom.FavouriteButt
 import net.thunderbird.feature.mail.message.list.ui.component.atom.MESSAGE_BADGE_SIZE
 import net.thunderbird.feature.mail.message.list.ui.component.atom.NewMessageBadge
 import net.thunderbird.feature.mail.message.list.ui.component.atom.UnreadMessageBadge
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageBadgeStyle
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemAccountIndicator
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemConfiguration
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemLeadingConfiguration
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemTrailingElement
 import net.thunderbird.feature.mail.message.list.ui.component.molecule.AccountIndicatorIcon
 import net.thunderbird.feature.mail.message.list.ui.component.molecule.HeaderRow
 import net.thunderbird.feature.mail.message.list.ui.component.molecule.HeaderRowSmall
@@ -82,7 +87,7 @@ internal fun MessageItem(
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = {},
     onAvatarClick: () -> Unit = {},
-    onTrailingClick: (MessageItemTrailingConfiguration.TrailingElement) -> Unit = {},
+    onTrailingClick: (MessageItemTrailingElement) -> Unit = {},
 ) {
     Surface(
         modifier = modifier
@@ -127,12 +132,12 @@ internal fun MessageItem(
             ) {
                 configuration.trailingConfiguration.elements.forEach { element ->
                     when (element) {
-                        is MessageItemTrailingConfiguration.TrailingElement.EncryptedBadge -> Icon(
+                        is MessageItemTrailingElement.EncryptedBadge -> Icon(
                             imageVector = Icons.Outlined.Encrypted,
                             contentDescription = null,
                         )
 
-                        is MessageItemTrailingConfiguration.TrailingElement.FavouriteIconButton -> FavouriteButtonIcon(
+                        is MessageItemTrailingElement.FavouriteIconButton -> FavouriteButtonIcon(
                             favourite = element.favourite,
                             onFavouriteChange = { onTrailingClick(element) },
                             size = MainTheme.sizes.minTouchTarget,

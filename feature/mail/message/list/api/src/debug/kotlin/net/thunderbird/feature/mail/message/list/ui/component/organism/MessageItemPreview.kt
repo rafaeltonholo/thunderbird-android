@@ -17,6 +17,14 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import net.thunderbird.core.ui.compose.designsystem.atom.icon.Icons
 import net.thunderbird.core.ui.compose.theme2.MainTheme
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageBadgeStyle
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemAccountIndicator
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemConfiguration
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemLeadingConfiguration
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemTrailingConfiguration
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemTrailingElement
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageSublineConfiguration
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageSublineLeadingIndicator
 import net.thunderbird.feature.mail.message.list.ui.component.molecule.MessageConversationCounterBadgeDefaults
 import net.thunderbird.feature.mail.message.list.ui.state.Avatar
 
@@ -31,8 +39,8 @@ private class MessageItemPrevParamCol : CollectionPreviewParameterProvider<Messa
             receivedAt = "12:34",
             avatar = Avatar.Monogram("AV"),
             trailingElements = persistentListOf(
-                MessageItemTrailingConfiguration.TrailingElement.EncryptedBadge,
-                MessageItemTrailingConfiguration.TrailingElement.FavouriteIconButton(favourite = true),
+                MessageItemTrailingElement.EncryptedBadge,
+                MessageItemTrailingElement.FavouriteIconButton(favourite = true),
             ),
         ),
         MessageItemPrevParams(
@@ -115,6 +123,7 @@ private class MessageItemPrevParamCol : CollectionPreviewParameterProvider<Messa
             selected = false,
             receivedAt = "12:34",
             maxExcerptLines = 5,
+            avatar = Avatar.Icon(imageVector = Icons.Outlined.Bank),
             badgeStyle = MessageBadgeStyle.Unread,
         ),
     ),
@@ -150,14 +159,14 @@ private fun PreviewDefault(
                     elements = params.trailingElements,
                 ),
                 accountIndicator = MessageItemAccountIndicator(params.accountColor),
-                secondaryLineConfiguration = MessageItemLineConfiguration(
+                secondaryLineConfiguration = MessageSublineConfiguration(
                     leadingItems = buildList {
                         if (params.hasAttachments) {
-                            add(MessageItemLeadingItem.AttachmentIcon)
+                            add(MessageSublineLeadingIndicator.AttachmentIcon)
                         }
                         if (params.threadCount > 1) {
                             add(
-                                MessageItemLeadingItem.ConversationCounterBadge(
+                                MessageSublineLeadingIndicator.ConversationCounterBadge(
                                     count = params.threadCount,
                                     color = MessageConversationCounterBadgeDefaults.newMessageColor(),
                                 ),
@@ -165,14 +174,14 @@ private fun PreviewDefault(
                         }
                     }.toPersistentList(),
                 ),
-                excerptLineConfiguration = MessageItemLineConfiguration(
+                excerptLineConfiguration = MessageSublineConfiguration(
                     leadingItems = buildList {
                         if (params.hasAttachments) {
-                            add(MessageItemLeadingItem.AttachmentIcon)
+                            add(MessageSublineLeadingIndicator.AttachmentIcon)
                         }
                         if (params.threadCount > 1) {
                             add(
-                                MessageItemLeadingItem.ConversationCounterBadge(
+                                MessageSublineLeadingIndicator.ConversationCounterBadge(
                                     count = params.threadCount,
                                     color = MessageConversationCounterBadgeDefaults.newMessageColor(),
                                 ),
@@ -223,14 +232,14 @@ private fun PreviewCompact(
                     elements = params.trailingElements,
                 ),
                 accountIndicator = MessageItemAccountIndicator(params.accountColor),
-                secondaryLineConfiguration = MessageItemLineConfiguration(
+                secondaryLineConfiguration = MessageSublineConfiguration(
                     leadingItems = buildList {
                         if (params.hasAttachments) {
-                            add(MessageItemLeadingItem.AttachmentIcon)
+                            add(MessageSublineLeadingIndicator.AttachmentIcon)
                         }
                         if (params.threadCount > 1) {
                             add(
-                                MessageItemLeadingItem.ConversationCounterBadge(
+                                MessageSublineLeadingIndicator.ConversationCounterBadge(
                                     count = params.threadCount,
                                     color = MessageConversationCounterBadgeDefaults.newMessageColor(),
                                 ),
@@ -238,14 +247,14 @@ private fun PreviewCompact(
                         }
                     }.toPersistentList(),
                 ),
-                excerptLineConfiguration = MessageItemLineConfiguration(
+                excerptLineConfiguration = MessageSublineConfiguration(
                     leadingItems = buildList {
                         if (params.hasAttachments) {
-                            add(MessageItemLeadingItem.AttachmentIcon)
+                            add(MessageSublineLeadingIndicator.AttachmentIcon)
                         }
                         if (params.threadCount > 1) {
                             add(
-                                MessageItemLeadingItem.ConversationCounterBadge(
+                                MessageSublineLeadingIndicator.ConversationCounterBadge(
                                     count = params.threadCount,
                                     color = MessageConversationCounterBadgeDefaults.newMessageColor(),
                                 ),
@@ -296,14 +305,14 @@ private fun PreviewRelaxed(
                     elements = params.trailingElements,
                 ),
                 accountIndicator = MessageItemAccountIndicator(params.accountColor),
-                secondaryLineConfiguration = MessageItemLineConfiguration(
+                secondaryLineConfiguration = MessageSublineConfiguration(
                     leadingItems = buildList {
                         if (params.hasAttachments) {
-                            add(MessageItemLeadingItem.AttachmentIcon)
+                            add(MessageSublineLeadingIndicator.AttachmentIcon)
                         }
                         if (params.threadCount > 1) {
                             add(
-                                MessageItemLeadingItem.ConversationCounterBadge(
+                                MessageSublineLeadingIndicator.ConversationCounterBadge(
                                     count = params.threadCount,
                                     color = MessageConversationCounterBadgeDefaults.newMessageColor(),
                                 ),
@@ -311,14 +320,14 @@ private fun PreviewRelaxed(
                         }
                     }.toPersistentList(),
                 ),
-                excerptLineConfiguration = MessageItemLineConfiguration(
+                excerptLineConfiguration = MessageSublineConfiguration(
                     leadingItems = buildList {
                         if (params.hasAttachments) {
-                            add(MessageItemLeadingItem.AttachmentIcon)
+                            add(MessageSublineLeadingIndicator.AttachmentIcon)
                         }
                         if (params.threadCount > 1) {
                             add(
-                                MessageItemLeadingItem.ConversationCounterBadge(
+                                MessageSublineLeadingIndicator.ConversationCounterBadge(
                                     count = params.threadCount,
                                     color = MessageConversationCounterBadgeDefaults.newMessageColor(),
                                 ),
@@ -369,14 +378,14 @@ private fun PreviewDefaultWithoutAccountIndicator(
                     elements = params.trailingElements,
                 ),
                 accountIndicator = null,
-                secondaryLineConfiguration = MessageItemLineConfiguration(
+                secondaryLineConfiguration = MessageSublineConfiguration(
                     leadingItems = buildList {
                         if (params.hasAttachments) {
-                            add(MessageItemLeadingItem.AttachmentIcon)
+                            add(MessageSublineLeadingIndicator.AttachmentIcon)
                         }
                         if (params.threadCount > 1) {
                             add(
-                                MessageItemLeadingItem.ConversationCounterBadge(
+                                MessageSublineLeadingIndicator.ConversationCounterBadge(
                                     count = params.threadCount,
                                     color = MessageConversationCounterBadgeDefaults.newMessageColor(),
                                 ),
@@ -384,14 +393,14 @@ private fun PreviewDefaultWithoutAccountIndicator(
                         }
                     }.toPersistentList(),
                 ),
-                excerptLineConfiguration = MessageItemLineConfiguration(
+                excerptLineConfiguration = MessageSublineConfiguration(
                     leadingItems = buildList {
                         if (params.hasAttachments) {
-                            add(MessageItemLeadingItem.AttachmentIcon)
+                            add(MessageSublineLeadingIndicator.AttachmentIcon)
                         }
                         if (params.threadCount > 1) {
                             add(
-                                MessageItemLeadingItem.ConversationCounterBadge(
+                                MessageSublineLeadingIndicator.ConversationCounterBadge(
                                     count = params.threadCount,
                                     color = MessageConversationCounterBadgeDefaults.newMessageColor(),
                                 ),

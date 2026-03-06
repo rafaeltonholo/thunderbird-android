@@ -15,7 +15,8 @@ import net.thunderbird.core.ui.compose.designsystem.atom.icon.Icons
 import net.thunderbird.core.ui.compose.theme2.MainTheme
 import net.thunderbird.feature.account.AccountIdFactory
 import net.thunderbird.feature.mail.message.list.preferences.MessageListPreferences
-import net.thunderbird.feature.mail.message.list.ui.component.organism.MessageItemTrailingConfiguration.TrailingElement
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemAccountIndicator
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemTrailingElement
 import net.thunderbird.feature.mail.message.list.ui.state.Account
 import net.thunderbird.feature.mail.message.list.ui.state.Avatar
 import net.thunderbird.feature.mail.message.list.ui.state.ComposedAddressUi
@@ -188,7 +189,7 @@ private fun PreviewDefault(
                 formattedReceivedAt = params.receivedAt,
                 hasAttachments = params.hasAttachments,
                 starred = params.favourite,
-                encrypted = params.trailingElements.any { it == TrailingElement.EncryptedBadge },
+                encrypted = params.trailingElements.any { it == MessageItemTrailingElement.EncryptedBadge },
                 answered = params.answered,
                 forwarded = params.forwarded,
                 selected = params.selected,
@@ -236,7 +237,7 @@ private fun PreviewCompact(
                 formattedReceivedAt = params.receivedAt,
                 hasAttachments = params.hasAttachments,
                 starred = params.favourite,
-                encrypted = params.trailingElements.any { it == TrailingElement.EncryptedBadge },
+                encrypted = params.trailingElements.any { it == MessageItemTrailingElement.EncryptedBadge },
                 answered = params.answered,
                 forwarded = params.forwarded,
                 selected = params.selected,
@@ -284,7 +285,7 @@ private fun PreviewRelaxed(
                 formattedReceivedAt = params.receivedAt,
                 hasAttachments = params.hasAttachments,
                 starred = params.favourite,
-                encrypted = params.trailingElements.any { it == TrailingElement.EncryptedBadge },
+                encrypted = params.trailingElements.any { it == MessageItemTrailingElement.EncryptedBadge },
                 answered = params.answered,
                 forwarded = params.forwarded,
                 selected = params.selected,
@@ -332,7 +333,7 @@ private fun PreviewDefaultWithoutAccountIndicator(
                 formattedReceivedAt = params.receivedAt,
                 hasAttachments = params.hasAttachments,
                 starred = params.favourite,
-                encrypted = params.trailingElements.any { it == TrailingElement.EncryptedBadge },
+                encrypted = params.trailingElements.any { it == MessageItemTrailingElement.EncryptedBadge },
                 answered = params.answered,
                 forwarded = params.forwarded,
                 selected = params.selected,

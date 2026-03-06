@@ -25,11 +25,11 @@ import kotlinx.collections.immutable.toImmutableMap
 import net.thunderbird.core.ui.compose.designsystem.atom.icon.Icon
 import net.thunderbird.core.ui.compose.designsystem.atom.icon.Icons
 import net.thunderbird.core.ui.compose.theme2.MainTheme
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemConfiguration
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageSublineConfiguration
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageSublineLeadingIndicator
 import net.thunderbird.feature.mail.message.list.ui.component.organism.MessageItemColors
-import net.thunderbird.feature.mail.message.list.ui.component.organism.MessageItemConfiguration
 import net.thunderbird.feature.mail.message.list.ui.component.organism.MessageItemDefaults
-import net.thunderbird.feature.mail.message.list.ui.component.organism.MessageItemLeadingItem
-import net.thunderbird.feature.mail.message.list.ui.component.organism.MessageItemLineConfiguration
 
 /**
  * Displays the main content body of a message item, including the subject line and optional excerpt.
@@ -93,12 +93,12 @@ private fun secondaryLineContent(
 
 @Composable
 private fun rememberPrefixAnnotatedString(
-    configuration: MessageItemLineConfiguration,
+    configuration: MessageSublineConfiguration,
 ): AnnotatedString = remember(configuration) {
     buildAnnotatedString {
         configuration.leadingItems.forEach { leadingItem ->
             when (leadingItem) {
-                is MessageItemLeadingItem.AttachmentIcon -> {
+                is MessageSublineLeadingIndicator.AttachmentIcon -> {
                     appendInlineContent(
                         id = MessageItemDefaults.ATTACHMENT_ICON_INLINE_COMPOSABLE_ID,
                         alternateText = MessageItemDefaults.ATTACHMENT_ICON_INLINE_COMPOSABLE_REPLACEMENT,
@@ -106,7 +106,7 @@ private fun rememberPrefixAnnotatedString(
                     append(" ")
                 }
 
-                is MessageItemLeadingItem.ConversationCounterBadge -> {
+                is MessageSublineLeadingIndicator.ConversationCounterBadge -> {
                     appendInlineContent(
                         id = MessageItemDefaults.CONVERSATION_COUNTER_INLINE_COMPOSABLE_ID,
                         alternateText = MessageItemDefaults.CONVERSATION_COUNTER_INLINE_COMPOSABLE_REPLACEMENT,
@@ -121,15 +121,13 @@ private fun rememberPrefixAnnotatedString(
 }
 
 @Composable
-private fun rememberInlineContent(
-    configuration: MessageItemLineConfiguration,
-): ImmutableMap<String, InlineTextContent> {
+private fun rememberInlineContent(configuration: MessageSublineConfiguration): ImmutableMap<String, InlineTextContent> {
     return remember(configuration) {
         configuration
             .leadingItems
             .mapNotNull { leadingItem ->
                 when (leadingItem) {
-                    is MessageItemLeadingItem.AttachmentIcon ->
+                    is MessageSublineLeadingIndicator.AttachmentIcon ->
                         MessageItemDefaults.ATTACHMENT_ICON_INLINE_COMPOSABLE_ID to InlineTextContent(
                             Placeholder(
                                 width = 16.sp,
@@ -140,7 +138,7 @@ private fun rememberInlineContent(
                             Icon(imageVector = Icons.Outlined.Attachment, contentDescription = null)
                         }
 
-                    is MessageItemLeadingItem.ConversationCounterBadge ->
+                    is MessageSublineLeadingIndicator.ConversationCounterBadge ->
                         MessageItemDefaults.CONVERSATION_COUNTER_INLINE_COMPOSABLE_ID to InlineTextContent(
                             Placeholder(
                                 width = calculateConversationCounterBadgeWidth(leadingItem.count),

@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import net.thunderbird.core.ui.compose.common.modifier.testTagAsResourceId
 import net.thunderbird.feature.mail.message.list.preferences.MessageListPreferences
-import net.thunderbird.feature.mail.message.list.ui.component.organism.MessageItemAccountIndicator
+import net.thunderbird.feature.mail.message.list.ui.component.config.MessageItemAccountIndicator
 import net.thunderbird.feature.mail.message.list.ui.component.organism.NewMessageItem
 import net.thunderbird.feature.mail.message.list.ui.component.organism.ReadMessageItem
 import net.thunderbird.feature.mail.message.list.ui.component.organism.UnreadMessageItem
