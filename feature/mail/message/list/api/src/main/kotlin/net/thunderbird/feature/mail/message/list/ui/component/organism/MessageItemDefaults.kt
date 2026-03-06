@@ -3,13 +3,32 @@ package net.thunderbird.feature.mail.message.list.ui.component.organism
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
+import net.thunderbird.core.preference.display.visualSettings.message.list.UiDensity
 import net.thunderbird.core.ui.compose.theme2.MainTheme
+import net.thunderbird.feature.mail.message.list.preferences.MessageListPreferences
+import net.thunderbird.feature.mail.message.list.ui.component.molecule.MessageConversationCounterBadgeColor
+import net.thunderbird.feature.mail.message.list.ui.component.organism.MessageItemTrailingConfiguration.TrailingElement
+import net.thunderbird.feature.mail.message.list.ui.state.MessageItemUi
 
 /**
  * Contains the default values used by all [MessageItem] types.
  */
 object MessageItemDefaults {
+    const val ATTACHMENT_ICON_INLINE_COMPOSABLE_ID = "attachment_icon_inline_composable_id"
+    const val ATTACHMENT_ICON_INLINE_COMPOSABLE_REPLACEMENT = "[attachment_icon]"
+    const val CONVERSATION_COUNTER_INLINE_COMPOSABLE_ID = "conversation_counter_inline_composable_id"
+    const val CONVERSATION_COUNTER_INLINE_COMPOSABLE_REPLACEMENT = "[conversation_counter]"
+
     /**
      * The default content padding.
      */
@@ -19,8 +38,7 @@ object MessageItemDefaults {
         get() = PaddingValues(
             top = MainTheme.spacings.oneHalf,
             bottom = MainTheme.spacings.oneHalf,
-            start = MainTheme.spacings.double,
-            end = MainTheme.spacings.triple,
+            start = MainTheme.spacings.triple,
         )
 
     /**
@@ -33,8 +51,7 @@ object MessageItemDefaults {
         get() = PaddingValues(
             top = MainTheme.spacings.default,
             bottom = MainTheme.spacings.default,
-            start = MainTheme.spacings.oneHalf,
-            end = MainTheme.spacings.double,
+            start = MainTheme.spacings.double,
         )
 
     /**
@@ -47,8 +64,7 @@ object MessageItemDefaults {
         get() = PaddingValues(
             top = MainTheme.spacings.double,
             bottom = MainTheme.spacings.double,
-            start = MainTheme.spacings.triple,
-            end = MainTheme.spacings.quadruple,
+            start = MainTheme.spacings.quadruple,
         )
 
     /**
@@ -124,7 +140,7 @@ object MessageItemDefaults {
      */
     @Composable
     fun selectedMessageItemColors(
-        containerColor: Color = MainTheme.colors.infoContainer,
+        containerColor: Color = MainTheme.colors.surfaceContainer,
         contentColor: Color = MainTheme.colors.onSurface,
         subjectColor: Color = MainTheme.colors.onSurfaceVariant,
     ): MessageItemColors = MessageItemColors(
@@ -144,6 +160,7 @@ object MessageItemDefaults {
      */
     @Composable
     fun activeMessageItemColors(
+        // MainTheme.colors.infoContainer == MainTheme.colors.surfaceVariantBlue
         containerColor: Color = MainTheme.colors.infoContainer,
         contentColor: Color = MainTheme.colors.onSurface,
         subjectColor: Color = MainTheme.colors.onSurfaceVariant,
@@ -153,23 +170,76 @@ object MessageItemDefaults {
         subjectColor = subjectColor,
     )
 
-    /**
-     * Creates a [MessageItemColors] that represent a message item that is currently a junk message.
-     *
-     * @param containerColor The container color of this [MessageItem].
-     * @param contentColor The content color of this [MessageItem].
-     * @param subjectColor The subject color of this [MessageItem].
-     */
     @Composable
-    fun junkMessageItemColors(
-        containerColor: Color = MainTheme.colors.surfaceContainerLow,
-        contentColor: Color = MainTheme.colors.onSurface,
-        subjectColor: Color = MainTheme.colors.onSurfaceVariant,
-    ): MessageItemColors = MessageItemColors(
-        containerColor = containerColor,
-        contentColor = contentColor,
-        subjectColor = subjectColor,
-    )
+    internal fun rememberConfiguration(
+        messageItemUi: MessageItemUi,
+        preferences: MessageListPreferences,
+        color: MessageConversationCounterBadgeColor,
+        accountIndicator: MessageItemAccountIndicator?,
+    ): MessageItemConfiguration = remember(messageItemUi, preferences) {
+        val leadingItems = buildLeadingItems(messageItemUi, color)
+        MessageItemConfiguration(
+            maxExcerptLines = preferences.excerptLines,
+            leadingConfiguration = MessageItemLeadingConfiguration(
+                badgeStyle = messageItemUi.state.toBadgeStyle(),
+                avatar = messageItemUi.senders.avatar,
+                avatarColor = messageItemUi.senders.color,
+            ),
+            accountIndicator = accountIndicator,
+            secondaryLineConfiguration = MessageItemLineConfiguration(
+                leadingItems = if (preferences.excerptLines == 0) leadingItems else persistentListOf(),
+            ),
+            excerptLineConfiguration = MessageItemLineConfiguration(
+                leadingItems = if (preferences.excerptLines > 0) leadingItems else persistentListOf(),
+            ),
+            trailingConfiguration = MessageItemTrailingConfiguration(
+                elements = buildTrailingElementsList(preferences, messageItemUi),
+            ),
+        )
+    }
+
+    private fun buildTrailingElementsList(
+        preferences: MessageListPreferences,
+        messageItemUi: MessageItemUi,
+    ): PersistentList<TrailingElement> = buildList {
+        if (preferences.showFavouriteButton) {
+            add(TrailingElement.FavouriteIconButton(favourite = messageItemUi.starred))
+        }
+        if (messageItemUi.encrypted) {
+            add(TrailingElement.EncryptedBadge)
+        }
+    }.toPersistentList()
+
+    private fun buildLeadingItems(
+        messageItemUi: MessageItemUi,
+        color: MessageConversationCounterBadgeColor,
+    ): PersistentList<MessageItemLeadingItem> = buildList {
+        if (messageItemUi.threadCount > 1) {
+            add(MessageItemLeadingItem.ConversationCounterBadge(count = messageItemUi.threadCount, color = color))
+        }
+        if (messageItemUi.hasAttachments) {
+            add(MessageItemLeadingItem.AttachmentIcon)
+        }
+    }.toPersistentList()
+
+    @Composable
+    internal fun UiDensity.toContentPadding(): PaddingValues = when (this) {
+        UiDensity.Compact -> compactContentPadding
+        UiDensity.Default -> defaultContentPadding
+        UiDensity.Relaxed -> relaxedContentPadding
+    }
+
+    internal fun buildSubjectAnnotatedString(subject: String): AnnotatedString = buildAnnotatedString {
+        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+            append(subject)
+        }
+    }
+
+    private fun MessageItemUi.State.toBadgeStyle(): MessageBadgeStyle? = when (this) {
+        MessageItemUi.State.New -> MessageBadgeStyle.New
+        MessageItemUi.State.Unread -> MessageBadgeStyle.Unread
+        MessageItemUi.State.Read -> null
+    }
 }
 
 /**
