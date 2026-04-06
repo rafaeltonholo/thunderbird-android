@@ -158,6 +158,7 @@ import net.thunderbird.feature.mail.message.list.preferences.MessageListPreferen
 import net.thunderbird.feature.mail.message.list.ui.MessageListContract
 import net.thunderbird.feature.mail.message.list.ui.dialog.SetupArchiveFolderDialogFragmentFactory
 import net.thunderbird.feature.mail.message.list.ui.effect.MessageListEffect
+import net.thunderbird.feature.mail.message.list.ui.event.MessageItemEvent
 import net.thunderbird.feature.mail.message.list.ui.event.MessageListEvent
 import net.thunderbird.feature.mail.message.list.ui.legacy.LegacyMessageListBridge
 import net.thunderbird.feature.mail.message.list.ui.state.MessageItemUi
@@ -518,6 +519,17 @@ class MessageListFragment :
                                 },
                             )
                             loadMessageList()
+                        }
+
+                        is MessageListEffect.UpdateToolbarActionMode -> {
+                            if (actionMode == null) {
+                                startAndPrepareActionMode()
+                            }
+                            actionMode?.let { actionMode ->
+                                actionMode.title = effect.title
+                                actionModeCallback.showSelectAll(!effect.isAllSelected)
+                                actionMode.invalidate()
+                            }
                         }
 
                         else -> Unit
@@ -1374,14 +1386,7 @@ class MessageListFragment :
             return
         }
 
-        // TODO(#10775): trigger select all event here.
-
-        if (actionMode == null) {
-            startAndPrepareActionMode()
-        }
-
-        computeBatchDirection()
-        updateActionMode()
+        viewModel.event(MessageItemEvent.SelectAll)
     }
 
     // TODO(#10775): Remove the unused suppression.
@@ -1420,12 +1425,12 @@ class MessageListFragment :
     }
 
     private fun updateActionMode() {
-        val actionMode = actionMode ?: error("actionMode == null")
-        val isAllSelected = stateSnapshot.messages.size == selectedMessagesCount
-        actionMode.title = getString(MessageListApiR.string.actionbar_selected, selectedMessagesCount)
-        actionModeCallback.showSelectAll(!isAllSelected)
-
-        actionMode.invalidate()
+//        val actionMode = actionMode ?: error("actionMode == null")
+//        val isAllSelected = stateSnapshot.messages.size == selectedMessagesCount
+//        actionMode.title = getString(MessageListApiR.string.actionbar_selected, selectedMessagesCount)
+//        actionModeCallback.showSelectAll(!isAllSelected)
+//
+//        actionMode.invalidate()
     }
 
     private fun computeBatchDirection() {
@@ -2309,7 +2314,7 @@ class MessageListFragment :
             flag = null
             unflag = null
 
-            // TODO(#10775): clear the current selected messages here, if needed.
+            viewModel.event(MessageItemEvent.DeselectAll)
         }
 
         override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
