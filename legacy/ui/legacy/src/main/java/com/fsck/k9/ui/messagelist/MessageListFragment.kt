@@ -1823,8 +1823,11 @@ class MessageListFragment :
         }
 
     private val selectedMessages: List<MessageReference>
-        // TODO(#10775): get() = adapter.selectedMessages.map { it.messageReference }
-        get() = emptyList()
+        get() = viewModel.state
+            .value
+            .messages
+            .filter { it.selected }
+            .mapNotNull { MessageReference.parse(it.messageReference) }
 
     override fun onDelete() {
         selectedMessage?.let { message ->
