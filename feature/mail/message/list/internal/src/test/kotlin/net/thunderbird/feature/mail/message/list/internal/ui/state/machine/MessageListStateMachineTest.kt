@@ -715,6 +715,7 @@ private fun createMessageUiItemList(
 private fun createMessageUiItem(
     state: State,
     id: String,
+    messageReference: String = "message_reference",
     accountId: AccountId = AccountIdFactory.create(),
     senders: ComposedAddressUi = ComposedAddressUi(displayName = "sender"),
     subject: String = "mock subject",
@@ -730,6 +731,7 @@ private fun createMessageUiItem(
 ): MessageItemUi = MessageItemUi(
     state = state,
     id = id,
+    messageReference = messageReference,
     account = Account(id = accountId, color = Color.Unspecified),
     senders = senders,
     subject = subject,
