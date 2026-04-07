@@ -12,7 +12,7 @@ import net.thunderbird.feature.mail.message.list.ui.MessageListStateSideEffectHa
 import net.thunderbird.feature.mail.message.list.ui.effect.MessageListEffect
 import net.thunderbird.feature.mail.message.list.ui.event.MessageListEvent
 import net.thunderbird.feature.mail.message.list.ui.state.MessageListState
-import net.thunderbird.feature.mail.message.list.R  as MessageListApiR
+import net.thunderbird.feature.mail.message.list.R as MessageListApiR
 
 private const val TAG = "MessageListViewModel"
 
