@@ -67,7 +67,6 @@ interface MessageListContract {
          *
          * @param state The current state of the message list to be rendered.
          * @param dispatchEvent A lambda function to be invoked when a user action or other UI event occurs.
-         * @param onEffect A lambda function to handle one-time side effects from the ViewModel.
          * @param modifier The modifier to be applied to the root container of the message list screen.
          * @param inAppNotificationEventFilter A filter to decide whether an in-app notification should be displayed.
          */
@@ -75,7 +74,6 @@ interface MessageListContract {
         fun Render(
             state: MessageListState,
             dispatchEvent: (MessageListEvent) -> Unit,
-            onEffect: (MessageListEffect) -> Unit,
             modifier: Modifier = Modifier,
             inAppNotificationEventFilter: (InAppNotification) -> Boolean = { true },
         )
