@@ -84,11 +84,11 @@ private val SwipeAction.behaviour: SwipeBehaviour
         SwipeAction.ToggleRead,
         SwipeAction.ToggleStar,
         SwipeAction.ArchiveSetupArchiveFolder,
-            -> SwipeBehaviour.Action()
+        -> SwipeBehaviour.Action()
 
         SwipeAction.Archive,
         SwipeAction.Delete,
         SwipeAction.Spam,
         SwipeAction.Move,
-            -> SwipeBehaviour.Dismiss()
+        -> SwipeBehaviour.Dismiss()
     }

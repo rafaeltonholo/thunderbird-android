@@ -46,7 +46,6 @@ import net.thunderbird.feature.mail.message.list.preferences.ActionRequiringUser
 import net.thunderbird.feature.mail.message.list.preferences.MessageListPreferences
 import net.thunderbird.feature.mail.message.list.ui.component.atom.MESSAGE_ITEM_FAVOURITE_ICON_BUTTON_TEST_TAG
 import net.thunderbird.feature.mail.message.list.ui.component.rememberMessageListScope
-import net.thunderbird.feature.mail.message.list.ui.effect.MessageListEffect
 import net.thunderbird.feature.mail.message.list.ui.event.MessageItemEvent
 import net.thunderbird.feature.mail.message.list.ui.event.MessageListEvent
 import net.thunderbird.feature.mail.message.list.ui.state.Avatar
@@ -492,7 +491,6 @@ class MessageListScreenRendererTest : ComposeTest() {
     private fun ComposeTest.setupTestSubjectComposable(
         messages: List<MessageItemUi>,
         dispatchEvent: (MessageListEvent) -> Unit = {},
-        onEffect: (MessageListEffect) -> Unit = {},
         preferences: MessageListPreferences = createPreferences(),
         metadata: MessageListMetadata = createMetadata(),
         state: MessageListState = MessageListState.LoadedMessages(
