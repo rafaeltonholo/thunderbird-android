@@ -1,0 +1,178 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://www.thunderbird.net/mobile.featureflag.schema.json",
+  "title": "Thunderbird Mobile Feature Flag Catalog (lean / provider-agnostic)",
+  "description": "Authoring + codegen source AND offline default snapshot. Dynamic targeting, percentage rollout and experiments are intentionally NOT modeled here — they are owned by the ONLINE OpenFeature provider (a managed vendor or a flagd-compatible engine). This file only declares: (1) the flag registry + codegen target, (2) each flag's baseline value, (3) the per app x channel offline overrides, and (4) the evaluation-context contract the app supplies to the provider.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "flags",
+    "defaults"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional self-reference so editors can resolve this schema (e.g. 'featureflag.schema.lean.json')."
+    },
+    "version": {
+      "type": "string",
+      "description": "Catalog version; used for the offline 'needs update' / staleness fallback."
+    },
+    "context": {
+      "type": "object",
+      "description": "The evaluation-context contract the app supplies to the online provider. Provider-agnostic; drives codegen of a typed context builder. NOT evaluated locally — the provider (vendor/flagd) targets on these attributes.",
+      "additionalProperties": false,
+      "properties": {
+        "targetingKey": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            }
+          }
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "type"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_]+$"
+              },
+              "type": {
+                "enum": [
+                  "string",
+                  "int",
+                  "double",
+                  "boolean"
+                ]
+              },
+              "source": {
+                "type": "string",
+                "description": "Where the value comes from (BuildConfig field, Build.VERSION, locale, current account...)."
+              },
+              "derived": {
+                "type": "string",
+                "description": "Expression if derived from other attributes, e.g. '{app}-{flavour}'."
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Closed set of allowed values, if any."
+              },
+              "optional": {
+                "type": "boolean",
+                "default": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "flags": {
+      "type": "array",
+      "description": "The flag registry: identity, codegen target, and baseline value. One entry per flag.",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "default"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "description": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "boolean"
+            ],
+            "default": "boolean",
+            "description": "Boolean only for now; the online provider may serve richer types later. To support multivariate, widen this enum and let 'default' accept the non-boolean value (or a variant key)."
+          },
+          "default": {
+            "type": "boolean",
+            "description": "Baseline value used offline and whenever no per-variant override applies. Promoting a flag = set this true and drop its overrides."
+          },
+          "target_feature": {
+            "type": "string",
+            "pattern": "^(:[a-z0-9_-]+)+$",
+            "description": "Gradle module path that owns the generated typed key constant, e.g. ':feature:notification:api'. Omit for legacy/core-owned keys."
+          },
+          "time_to_promote": {
+            "type": "string",
+            "format": "date",
+            "description": "Target date to graduate or remove the flag (lifecycle hygiene)."
+          }
+        }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "description": "Offline default snapshot. Per app, per channel, ONLY the flag keys whose value differs from the flag's 'default'. An absent/empty channel means every flag takes its 'default'. The bundled (offline) provider serves: flag.default MERGED WITH the matching app/channel override. (Keys here must exist in 'flags' — enforced by the codegen/validation tool.)",
+      "additionalProperties": false,
+      "properties": {
+        "thunderbird": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "debug": {
+              "$ref": "#/definitions/overrideMap"
+            },
+            "daily": {
+              "$ref": "#/definitions/overrideMap"
+            },
+            "beta": {
+              "$ref": "#/definitions/overrideMap"
+            },
+            "release": {
+              "$ref": "#/definitions/overrideMap"
+            }
+          }
+        },
+        "k9": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "debug": {
+              "$ref": "#/definitions/overrideMap"
+            },
+            "release": {
+              "$ref": "#/definitions/overrideMap"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "overrideMap": {
+      "type": "object",
+      "description": "flagKey -> boolean override (value differs from the flag's 'default').",
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    }
+  }
+}

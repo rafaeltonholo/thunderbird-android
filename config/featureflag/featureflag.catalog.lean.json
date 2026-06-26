@@ -1,0 +1,158 @@
+{
+  "$schema": "featureflag.schema.lean.json",
+  "version": "2026-06-18.1",
+  "context": {
+    "targetingKey": {
+      "source": "random_install_id",
+      "description": "Stable random per-install identifier for rollout/experiment bucketing. NOT a user identifier."
+    },
+    "attributes": [
+      {
+        "name": "app",
+        "type": "string",
+        "source": "BuildConfig (app module)",
+        "values": [
+          "thunderbird",
+          "k9"
+        ]
+      },
+      {
+        "name": "flavour",
+        "type": "string",
+        "source": "BuildConfig.FLAVOR",
+        "values": [
+          "debug",
+          "daily",
+          "beta",
+          "release"
+        ]
+      },
+      {
+        "name": "variant",
+        "type": "string",
+        "derived": "{app}-{flavour}"
+      },
+      {
+        "name": "app_version",
+        "type": "string",
+        "source": "BuildConfig.VERSION_NAME"
+      },
+      {
+        "name": "os_sdk_int",
+        "type": "int",
+        "source": "Build.VERSION.SDK_INT"
+      },
+      {
+        "name": "manufacturer",
+        "type": "string",
+        "source": "Build.MANUFACTURER"
+      },
+      {
+        "name": "country",
+        "type": "string",
+        "source": "Locale region / SIM country",
+        "optional": true
+      },
+      {
+        "name": "account_type",
+        "type": "string",
+        "source": "current account",
+        "optional": true
+      }
+    ]
+  },
+  "flags": [
+    {
+      "key": "archive_marks_as_read",
+      "default": true,
+      "description": "Marks message as read when archived."
+    },
+    {
+      "key": "disable_font_size_config",
+      "default": true,
+      "description": "Disables legacy font-size configuration UI."
+    },
+    {
+      "key": "email_notification_default",
+      "default": true,
+      "description": "Default email-notification behaviour for new accounts."
+    },
+    {
+      "key": "enable_avatar_customization",
+      "default": true,
+      "target_feature": ":feature:account:settings:api",
+      "description": "Enables avatar customization in account settings."
+    },
+    {
+      "key": "use_new_message_reader_css_styles",
+      "default": true,
+      "target_feature": ":feature:mail:message:reader:api",
+      "description": "Uses new message-reader CSS styles.",
+      "time_to_promote": "2026-09-30"
+    },
+    {
+      "key": "thundermail_onboarding_enabled",
+      "default": true,
+      "target_feature": ":feature:thundermail:api",
+      "description": "Enables Thundermail onboarding flow."
+    },
+    {
+      "key": "use_compose_for_message_list_items",
+      "default": false,
+      "target_feature": ":feature:mail:message:list:api",
+      "description": "Renders message-list items with Compose."
+    },
+    {
+      "key": "enable_message_list_new_state",
+      "default": false,
+      "target_feature": ":feature:mail:message:list:api",
+      "description": "Enables the new message-list state."
+    },
+    {
+      "key": "use_compose_for_message_reader",
+      "default": false,
+      "target_feature": ":feature:mail:message:reader:api",
+      "description": "Renders the message reader with Compose."
+    },
+    {
+      "key": "display_in_app_notifications",
+      "default": false,
+      "target_feature": ":feature:notification:api",
+      "description": "Enables in-app notifications."
+    },
+    {
+      "key": "use_notification_sender_for_system_notifications",
+      "default": false,
+      "target_feature": ":feature:notification:api",
+      "description": "Uses NotificationSender for system notifications instead of the legacy controller."
+    },
+    {
+      "key": "message_view_action_export_eml",
+      "default": false,
+      "description": "Adds the 'Export EML' message action (legacy/ui)."
+    }
+  ],
+  "defaults": {
+    "thunderbird": {
+      "debug": {
+        "display_in_app_notifications": true,
+        "use_notification_sender_for_system_notifications": true,
+        "message_view_action_export_eml": true
+      },
+      "daily": {
+        "display_in_app_notifications": true,
+        "message_view_action_export_eml": true
+      },
+      "beta": {
+        "display_in_app_notifications": true
+      },
+      "release": {}
+    },
+    "k9": {
+      "debug": {
+        "message_view_action_export_eml": true
+      },
+      "release": {}
+    }
+  }
+}
