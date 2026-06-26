@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     `kotlin-dsl`
+    alias(libs.plugins.kotlin.serialization)
 }
 
 group = "net.thunderbird.gradle.plugin"
@@ -24,7 +25,7 @@ dependencies {
     compileOnly(plugin(libs.plugins.android.application))
 
     compileOnly(plugin(libs.plugins.kotlin.multiplatform))
-    compileOnly(plugin(libs.plugins.kotlin.serialization))
+    implementation(plugin(libs.plugins.kotlin.serialization))
 
     implementation(plugin(libs.plugins.compose))
 
@@ -36,6 +37,9 @@ dependencies {
 
     compileOnly(plugin(libs.plugins.kover))
     implementation(libs.diff.utils)
+    implementation(libs.kotlinpoet)
+    implementation(libs.networknt.jsonSchemaValidator)
+    implementation(libs.kotlinx.serialization.json)
     compileOnly(libs.kotlinx.datetime)
 }
 
@@ -74,6 +78,10 @@ gradlePlugin {
         register("QualitySpotless") {
             id = "net.thunderbird.gradle.plugin.quality.spotless"
             implementationClass = "net.thunderbird.gradle.plugin.quality.spotless.SpotlessPlugin"
+        }
+        register("FeatureFlag") {
+            id = "net.thunderbird.gradle.plugin.featureflag"
+            implementationClass = "net.thunderbird.gradle.plugin.featureflag.FeatureFlagPlugin"
         }
     }
 }

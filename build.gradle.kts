@@ -15,6 +15,13 @@ plugins {
     id("thunderbird.dependency.check")
     id("net.thunderbird.gradle.plugin.quality.coverage")
     id("net.thunderbird.gradle.plugin.quality.spotless")
+    alias(libs.plugins.tb.featureflag)
+}
+
+featureFlag {
+    val dir = project.layout.projectDirectory
+    schema.set(dir.file("config/featureflag/featureflag.schema.lean.json"))
+    catalog.set(dir.file("config/featureflag/featureflag.catalog.lean.json"))
 }
 
 allprojects {

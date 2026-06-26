@@ -93,6 +93,7 @@ koinBom = "4.2.1"
 konsist = "0.17.3"
 kotlinBom = "2.4.0"
 kotlinKsp = "2.3.9"
+kotlinpoet = "2.3.0"
 kotlinxCoroutines = "1.11.0"
 kotlinxCollectionsImmutable = "0.4.0"
 kotlinxDateTime = "0.8.0"
@@ -267,6 +268,7 @@ koin-test = { module = "io.insert-koin:koin-test" }
 koin-test-junit4 = { module = "io.insert-koin:koin-test-junit4" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlinBom" }
+kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit" }
