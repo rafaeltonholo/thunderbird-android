@@ -2,9 +2,11 @@ package net.thunderbird.gradle.plugin.featureflag
 
 import com.android.build.api.dsl.ApplicationExtension
 import javax.inject.Inject
+import net.thunderbird.gradle.plugin.featureflag.FeatureFlagPlugin.Companion.FEATURE_FLAG_MODULE_PATH
 import net.thunderbird.gradle.plugin.featureflag.schema.SchemaValidator
 import net.thunderbird.gradle.plugin.featureflag.task.GenerateFeatureFlagKeyEnumsTask
 import net.thunderbird.gradle.plugin.featureflag.task.GenerateFeatureFlagKeyEnumsTask.FeatureFlagKeyEnumsExtension
+import net.thunderbird.gradle.plugin.featureflag.task.registerTask
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -28,8 +30,6 @@ class FeatureFlagPlugin : Plugin<Project> {
             }
 
             isAppProject -> applyForAppProject()
-
-            else -> applyForConsumerProject()
         }
     }
 
@@ -61,13 +61,28 @@ class FeatureFlagPlugin : Plugin<Project> {
                 throw GradleException(message)
             }
 
-            SchemaValidator.Result.Success ->
-                subprojects.forEach { project ->
-                    logger.lifecycle("Registering '${GenerateFeatureFlagKeyEnumsTask.TASK_NAME}' on $project")
-                    val task =
-                        project.tasks.maybeCreate<GenerateFeatureFlagKeyEnumsTask>(GenerateFeatureFlagKeyEnumsTask.TASK_NAME)
-                    logger.lifecycle("Registered: $task into $project")
-                }
+            SchemaValidator.Result.Success -> registerKeyEnumGeneration(extension)
+        }
+    }
+
+    /**
+     * Registers the key-enum generation task on the owning [FEATURE_FLAG_MODULE_PATH] module.
+     *
+     * The generated enum has a fixed, global fully-qualified name, so it must be compiled exactly
+     * once. Generating it into the module that every consumer already depends on lets the single
+     * class flow transitively to all of them, avoiding duplicate-class failures at dex merge.
+     */
+    private fun Project.registerKeyEnumGeneration(extension: FeatureFlagExtension) {
+        val featureFlagModule = project(FEATURE_FLAG_MODULE_PATH)
+        // Defer until the owning module is configured: its Kotlin/KMP extension, used to wire the
+        // generated source set, is only available after the module has been evaluated.
+        featureFlagModule.afterEvaluate {
+            if (tasks.findByName(GenerateFeatureFlagKeyEnumsTask.TASK_NAME) != null) {
+                return@afterEvaluate
+            }
+            logger.debug("[feature-flag] Registering '{}' on {}", GenerateFeatureFlagKeyEnumsTask.TASK_NAME, this)
+            val task = tasks.registerTask(this, extension)
+            logger.debug("[feature-flag] Registered: {} into {}", task, this)
         }
     }
 
@@ -75,8 +90,8 @@ class FeatureFlagPlugin : Plugin<Project> {
         logger.lifecycle("[feature-flag] Applied on app project: $this")
     }
 
-    private fun Project.applyForConsumerProject() {
-        logger.lifecycle("[feature-flag] Applied on consumer project: $this")
+    private companion object {
+        const val FEATURE_FLAG_MODULE_PATH = ":core:featureflag"
     }
 }
 

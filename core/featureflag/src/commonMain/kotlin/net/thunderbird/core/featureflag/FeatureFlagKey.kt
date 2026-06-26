@@ -16,10 +16,7 @@ interface FeatureFlagKey {
      * Returns a human-readable description of this element, or null if no description is available.
      */
     val description: String? get() = null
-}
 
-@JvmInline
-value class LegacyFeatureFlagKey(override val key: String) : FeatureFlagKey {
     companion object Keys {
         /**
          * DO NOT ADD NEW FEATURE FLAGS HERE.
@@ -33,6 +30,9 @@ value class LegacyFeatureFlagKey(override val key: String) : FeatureFlagKey {
             "use_notification_sender_for_system_notifications".toFeatureFlagKey()
     }
 }
+
+@JvmInline
+value class LegacyFeatureFlagKey(override val key: String) : FeatureFlagKey
 
 fun FeatureFlagKey(key: String): FeatureFlagKey = key.toFeatureFlagKey()
 
