@@ -8,7 +8,7 @@
   "required": [
     "version",
     "flags",
-    "defaults"
+    "overrides"
   ],
   "properties": {
     "$schema": {
@@ -24,7 +24,7 @@
       "description": "The evaluation-context contract the app supplies to the online provider. Provider-agnostic; drives codegen of a typed context builder. NOT evaluated locally — the provider (vendor/flagd) targets on these attributes.",
       "additionalProperties": false,
       "properties": {
-        "targetingKey": {
+        "targeting_key": {
           "type": "object",
           "additionalProperties": false,
           "required": [
@@ -128,7 +128,7 @@
         }
       }
     },
-    "defaults": {
+    "overrides": {
       "type": "object",
       "description": "Offline default snapshot. Per app, per channel, ONLY the flag keys whose value differs from the flag's 'default'. An absent/empty channel means every flag takes its 'default'. The bundled (offline) provider serves: flag.default MERGED WITH the matching app/channel override. (Keys here must exist in 'flags' — enforced by the codegen/validation tool.)",
       "additionalProperties": false,

@@ -2,7 +2,7 @@
   "$schema": "featureflag.schema.lean.json",
   "version": "2026-06-18.1",
   "context": {
-    "targetingKey": {
+    "targeting_key": {
       "source": "random_install_id",
       "description": "Stable random per-install identifier for rollout/experiment bucketing. NOT a user identifier."
     },
@@ -132,7 +132,7 @@
       "description": "Adds the 'Export EML' message action (legacy/ui)."
     }
   ],
-  "defaults": {
+  "overrides": {
     "thunderbird": {
       "debug": {
         "display_in_app_notifications": true,

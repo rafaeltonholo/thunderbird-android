@@ -1,6 +1,8 @@
 package net.thunderbird.gradle.plugin.featureflag
 
 import com.android.build.api.dsl.ApplicationExtension
+import net.thunderbird.gradle.plugin.featureflag.schema.SchemaValidator
+import net.thunderbird.gradle.plugin.featureflag.task.GenerateFeatureFlagKeyEnumsTask
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -8,6 +10,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.findByType
+import org.gradle.kotlin.dsl.maybeCreate
 
 @Suppress("unused")
 class FeatureFlagPlugin : Plugin<Project> {
@@ -32,6 +35,35 @@ class FeatureFlagPlugin : Plugin<Project> {
 
     private fun Project.applyForRootProject(extension: FeatureFlagExtension) {
         logger.lifecycle("[feature-flag] Applied on root project: $this")
+
+        val schemaValidator = SchemaValidator(validateFormats = extension.validateFormats.orElse(true).get())
+        when (val result = schemaValidator.validate(
+            schemaFile = extension.schema.asFile.get(),
+            catalog = extension.catalog.asFile.get(),
+        )) {
+            is SchemaValidator.Result.Error.FileNotFound -> throw GradleException(
+                "Failed to apply feature flag plugin. Reason: File '${result.path}' not found.",
+            )
+
+            is SchemaValidator.Result.Error.ValidationFailed -> {
+                val detail = result.errors.joinToString(System.lineSeparator()) { error ->
+                    "- $error"
+                }
+                val message = "Feature flag catalog JSON validation failed for ${result.catalog.path} against ${
+                    result.schema.path
+                }:${System.lineSeparator()}$detail"
+
+                throw GradleException(message)
+            }
+
+            SchemaValidator.Result.Success ->
+                subprojects.forEach { project ->
+                    logger.lifecycle("Registering '${GenerateFeatureFlagKeyEnumsTask.TASK_NAME}' on $project")
+                    val task =
+                        project.tasks.maybeCreate<GenerateFeatureFlagKeyEnumsTask>(GenerateFeatureFlagKeyEnumsTask.TASK_NAME)
+                    logger.lifecycle("Registered: $task into $project")
+                }
+        }
     }
 
     private fun Project.applyForAppProject() {
