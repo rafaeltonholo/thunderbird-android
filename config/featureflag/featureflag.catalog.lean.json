@@ -17,9 +17,9 @@
         ]
       },
       {
-        "name": "flavour",
+        "name": "build_type",
         "type": "string",
-        "source": "BuildConfig.FLAVOR",
+        "source": "BuildConfig.BUILD_TYPE",
         "values": [
           "debug",
           "daily",
@@ -30,7 +30,7 @@
       {
         "name": "variant",
         "type": "string",
-        "derived": "{app}-{flavour}"
+        "derived": "{app}-{build_type}"
       },
       {
         "name": "app_version",
@@ -41,23 +41,6 @@
         "name": "os_sdk_int",
         "type": "int",
         "source": "Build.VERSION.SDK_INT"
-      },
-      {
-        "name": "manufacturer",
-        "type": "string",
-        "source": "Build.MANUFACTURER"
-      },
-      {
-        "name": "country",
-        "type": "string",
-        "source": "Locale region / SIM country",
-        "optional": true
-      },
-      {
-        "name": "account_type",
-        "type": "string",
-        "source": "current account",
-        "optional": true
       }
     ]
   },
