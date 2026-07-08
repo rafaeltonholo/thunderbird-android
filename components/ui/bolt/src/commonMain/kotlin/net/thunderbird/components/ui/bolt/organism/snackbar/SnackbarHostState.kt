@@ -33,7 +33,7 @@ sealed interface SnackbarHostState {
      *    [SnackbarDuration.Indefinite]
      *  @param duration duration to control how long snackbar will be shown in [SnackbarHost], either
      *    [SnackbarDuration.Short], [SnackbarDuration.Long] or [SnackbarDuration.Indefinite].
-     *  @return [SnackbarResult.ActionPerformed] if option action has been clicked or
+     *  @return [SnackbarResult.ActionPerformed] if optional action has been clicked or
      *    [SnackbarResult.Dismissed] if snackbar has been dismissed via timeout or by the user
      */
     suspend fun showSnackbar(
