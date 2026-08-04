@@ -1,0 +1,3 @@
+random placeholder marker 01
+color: teal
+lucky number: 42
