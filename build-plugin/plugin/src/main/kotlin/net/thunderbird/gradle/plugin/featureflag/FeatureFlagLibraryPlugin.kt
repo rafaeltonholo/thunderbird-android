@@ -1,10 +1,14 @@
 package net.thunderbird.gradle.plugin.featureflag
 
+import com.github.gmazzo.buildconfig.BuildConfigExtension
+import com.github.gmazzo.buildconfig.BuildConfigPlugin
+import java.util.Properties
 import net.thunderbird.gradle.plugin.featureflag.task.registerFeatureFlagKeyEnumsTask
 import net.thunderbird.gradle.plugin.featureflag.task.wireGeneratedSourcesIntoKmpSourceSet
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
 
 /**
@@ -21,6 +25,7 @@ abstract class FeatureFlagLibraryPlugin : Plugin<Project> {
         if (target == target.rootProject.project(FEATURE_FLAG_MODULE_PATH)) {
             val extension = target.extensions.create<FeatureFlagPluginExtension>(FeatureFlagPluginExtension.NAME)
             target.registerKeyEnumGeneration(extension)
+            target.setupRemoteFeatureFlagUrl(extension)
         } else {
             throw GradleException("This plugin must be applied only on $FEATURE_FLAG_MODULE_PATH")
         }
@@ -38,6 +43,32 @@ abstract class FeatureFlagLibraryPlugin : Plugin<Project> {
         val taskProvider = registerFeatureFlagKeyEnumsTask(extension)
         pluginManager.withPlugin(KOTLIN_MULTIPLATFORM_PLUGIN_ID) {
             wireGeneratedSourcesIntoKmpSourceSet(taskProvider)
+        }
+    }
+
+    private fun Project.setupRemoteFeatureFlagUrl(extension: FeatureFlagPluginExtension) {
+        pluginManager.apply(BuildConfigPlugin::class.java)
+        configure<BuildConfigExtension> {
+            packageName("net.thunderbird.core.featureflag.config")
+            val featureFlagRemoteUrl: String? = loadLocalProperties().getProperty("featureflag.remote.url")
+            buildConfigField(
+                type = String::class.java,
+                name = "FEATURE_FLAG_REMOTE_URL",
+                value = featureFlagRemoteUrl,
+            )
+            buildConfigField(
+                type = String::class.java,
+                name = "FEATURE_FLAG_REMOTE_CACHE_FILENAME",
+                value = extension.cacheFilename,
+            )
+        }
+    }
+
+    private fun Project.loadLocalProperties(): Properties = Properties().apply {
+        @Suppress("UnstableApiUsage")
+        val localProperties = isolated.rootProject.projectDirectory.file("local.properties").asFile
+        if (localProperties.exists()) {
+            localProperties.inputStream().use(::load)
         }
     }
 
