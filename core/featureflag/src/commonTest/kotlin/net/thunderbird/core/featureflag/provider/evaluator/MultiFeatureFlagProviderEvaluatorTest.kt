@@ -5,18 +5,32 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.thunderbird.core.featureflag.FeatureFlagKey
 import net.thunderbird.core.featureflag.FeatureFlagResult
+import net.thunderbird.core.featureflag.data.FeatureFlagCatalogDataSource
 import net.thunderbird.core.featureflag.keys.GeneratedFeatureFlagKey.MESSAGE_VIEW_ACTION_EXPORT_EML
+import net.thunderbird.core.featureflag.model.AppVariantOverridesRawType
+import net.thunderbird.core.featureflag.model.BaseAppVariantOverrides
+import net.thunderbird.core.featureflag.model.FeatureFlagCatalog
+import net.thunderbird.core.featureflag.model.FlagRegistry
+import net.thunderbird.core.featureflag.model.FlagRegistryOverride
+import net.thunderbird.core.featureflag.provider.BundledCatalogFeatureFlagProvider
 import net.thunderbird.core.featureflag.provider.CatalogFeatureFlagProvider
 import net.thunderbird.core.featureflag.provider.CatalogFeatureFlagProvider.State
 import net.thunderbird.core.featureflag.provider.ProviderMetadata
+import net.thunderbird.core.featureflag.provider.RemoteCatalogFeatureFlagProvider
+import net.thunderbird.core.featureflag.provider.context.FeatureFlagContext
+import net.thunderbird.core.featureflag.provider.context.ImmutableFeatureFlagContext
 import net.thunderbird.core.logging.testing.TestLogger
 
 class MultiFeatureFlagProviderEvaluatorTest {
@@ -146,11 +160,65 @@ class MultiFeatureFlagProviderEvaluatorTest {
         assertThat(notQueriedProvider.provideCount).isEqualTo(0)
     }
 
+    @Test
+    fun `initialize should throw when no BundledCatalogFeatureFlagProvider is present`() = runTest {
+        // Arrange
+        val testSubject = createTestSubject(remoteCatalogProvider())
+
+        // Act & Assert
+        assertFailsWith<IllegalStateException> { testSubject.initialize(initialContext = context()) }
+    }
+
+    @Test
+    fun `initialize should throw when more than one BundledCatalogFeatureFlagProvider is present`() = runTest {
+        // Arrange
+        val testSubject = createTestSubject(bundledCatalogProvider(), bundledCatalogProvider())
+
+        // Act & Assert
+        assertFailsWith<IllegalStateException> { testSubject.initialize(initialContext = context()) }
+    }
+
+    @Test
+    fun `initialize should resolve both the bundled and the other providers`() = runTest {
+        // Arrange
+        val bundled = bundledCatalogProvider()
+        val remote = remoteCatalogProvider()
+        val testSubject = createTestSubject(bundled, remote)
+
+        // Act
+        testSubject.initialize(initialContext = context())
+
+        // Assert
+        assertThat(bundled.state.value).isEqualTo(State.Resolved)
+        assertThat(remote.state.value).isEqualTo(State.Resolved)
+    }
+
     private fun createTestSubject(
         vararg providers: CatalogFeatureFlagProvider,
     ): MultiFeatureFlagProviderEvaluator = DefaultMultiFeatureFlagProviderEvaluator(
         providers = providers.toList(),
         logger = TestLogger(),
+    )
+
+    private fun bundledCatalogProvider(): BundledCatalogFeatureFlagProvider = BundledCatalogFeatureFlagProvider(
+        dataSource = FakeFeatureFlagCatalogDataSource(catalog()),
+        logger = TestLogger(),
+    )
+
+    private fun remoteCatalogProvider(): RemoteCatalogFeatureFlagProvider = RemoteCatalogFeatureFlagProvider(
+        dataSource = FakeFeatureFlagCatalogDataSource(catalog()),
+        logger = TestLogger(),
+    )
+
+    private fun context(): FeatureFlagContext = ImmutableFeatureFlagContext(targetingKey = "targeting-key")
+
+    private fun catalog(): FeatureFlagCatalog = FeatureFlagCatalog(
+        version = "2026-07-30.1",
+        flags = listOf(FlagRegistry(key = MESSAGE_VIEW_ACTION_EXPORT_EML.key, default = true)),
+        overrides = FlagRegistryOverride(
+            k9 = FakeAppVariantOverrides(emptyMap()),
+            thunderbird = FakeAppVariantOverrides(emptyMap()),
+        ),
     )
 
     private companion object {
@@ -159,6 +227,16 @@ class MultiFeatureFlagProviderEvaluatorTest {
         const val THIRD = "third"
     }
 }
+
+private class FakeFeatureFlagCatalogDataSource(
+    private val catalog: FeatureFlagCatalog,
+) : FeatureFlagCatalogDataSource {
+    override fun observe(): Flow<FeatureFlagCatalog> = emptyFlow()
+
+    override suspend fun load(): FeatureFlagCatalog = catalog
+}
+
+private class FakeAppVariantOverrides(wrapper: AppVariantOverridesRawType) : BaseAppVariantOverrides(wrapper)
 
 /**
  * Records the order in which the providers it creates are queried, so tests can assert both the

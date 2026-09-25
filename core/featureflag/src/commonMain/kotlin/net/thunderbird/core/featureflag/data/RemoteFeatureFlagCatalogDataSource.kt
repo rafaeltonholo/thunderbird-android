@@ -16,9 +16,10 @@ import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import kotlinx.io.Buffer
 import kotlinx.io.IOException
@@ -50,36 +51,48 @@ class RemoteFeatureFlagCatalogDataSource(
     },
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : FeatureFlagCatalogDataSource {
-    override fun load(): Flow<FeatureFlagCatalog> = configStore.config
-        .map { config ->
+    private val catalog = MutableStateFlow<FeatureFlagCatalog?>(null)
+
+    override fun observe(): Flow<FeatureFlagCatalog> = catalog.mapNotNull { it }
+
+    override suspend fun load(): FeatureFlagCatalog? {
+        return catalog.value ?: try {
+            val config = configStore.config.first()
             val remoteCatalogConfig = config.remoteCatalogConfig
             if (!remoteCatalogConfig.enabled) {
                 throw RemoteCatalogException(code = Code.RemoteCatalogUserDisabled)
             }
 
             val cacheMetadata = httpClient.fetchCacheMetadata(url)
-            if (remoteCatalogConfig.cacheMetadata != cacheMetadata) {
+            val result = if (remoteCatalogConfig.cacheMetadata != cacheMetadata) {
                 downloadAndCache(url, cacheMetadata)
             } else {
                 readFromCache()
             }
-        }
-        .catch { e ->
-            when (e) {
-                is RemoteCatalogException if e.code == Code.RemoteCatalogUserDisabled -> logger.debug(throwable = e) {
+            catalog.update { result }
+            result
+        } catch (e: RemoteCatalogException) {
+            when (e.code) {
+                Code.RemoteCatalogUserDisabled -> logger.debug(throwable = e) {
                     "$LOG_PREFIX Skipping remote catalog; user disabled."
                 }
 
-                is JsonConvertException, is SerializationException -> logger.error(throwable = e) {
-                    "$LOG_PREFIX Failed to convert JSON to FeatureFlagCatalog"
-                }
+                Code.CantWriteCacheFile -> logger.debug(throwable = e) { "$LOG_PREFIX Failed to write cache file." }
 
-                is IOException -> logger.error(throwable = e) {
-                    "$LOG_PREFIX Failed to fetch Feature Flag Remote Catalog"
-                }
+                Code.CantReadCacheFile -> logger.debug(throwable = e) { "$LOG_PREFIX Failed to read cache file." }
             }
+            null
+        } catch (e: JsonConvertException) {
+            logger.error(throwable = e) { "$LOG_PREFIX Failed to convert JSON to FeatureFlagCatalog" }
+            null
+        } catch (e: SerializationException) {
+            logger.error(throwable = e) { "$LOG_PREFIX Failed to convert JSON to FeatureFlagCatalog" }
+            null
+        } catch (e: IOException) {
+            logger.error(throwable = e) { "$LOG_PREFIX Failed to fetch Feature Flag Remote Catalog" }
+            null
         }
-        .flowOn(ioDispatcher)
+    }
 
     /**
      * Issues a HEAD request to [url] and extracts the [RemoteCatalogCacheMetadata] from the

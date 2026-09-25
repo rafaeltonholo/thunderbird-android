@@ -15,7 +15,7 @@ class RemoteCatalogFeatureFlagProvider(
 ) {
 
     override suspend fun loadCatalog(): FeatureFlagCatalog? {
-        val catalog = dataSource.load().firstOrNull()
+        val catalog = dataSource.load()
         if (catalog == null) {
             logger.warn { "$logPrefix Remote catalog is not available." }
         }

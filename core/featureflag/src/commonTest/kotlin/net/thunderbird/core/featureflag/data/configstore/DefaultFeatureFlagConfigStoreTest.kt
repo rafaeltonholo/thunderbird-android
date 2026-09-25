@@ -52,6 +52,26 @@ class DefaultFeatureFlagConfigStoreTest {
     }
 
     @Test
+    fun `config should round trip the remote catalog config together with the overrides`() = runTest {
+        // Arrange
+        val backend = TestConfigBackend()
+        val testSubject = createTestSubject(backend)
+        testSubject.safeUpdate { current: FeatureFlagConfigData ->
+            current.copy(
+                remoteCatalogConfig = current.remoteCatalogConfig.copy(enabled = false),
+                overrides = mapOf("flag_a" to true),
+            )
+        }
+
+        // Act
+        val result = createTestSubject(backend).config.first()
+
+        // Assert
+        assertThat(result.remoteCatalogConfig.enabled).isEqualTo(false)
+        assertThat(result.overrides).containsOnly("flag_a" to true)
+    }
+
+    @Test
     fun `config should drop the persisted overrides when they are removed`() = runTest {
         // Arrange
         val backend = TestConfigBackend()
