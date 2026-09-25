@@ -3,11 +3,13 @@ package net.thunderbird.gradle.plugin.featureflag
 import com.github.gmazzo.buildconfig.BuildConfigExtension
 import com.github.gmazzo.buildconfig.BuildConfigPlugin
 import java.util.Properties
+import javax.inject.Inject
 import net.thunderbird.gradle.plugin.featureflag.task.registerFeatureFlagKeyEnumsTask
 import net.thunderbird.gradle.plugin.featureflag.task.wireGeneratedSourcesIntoKmpSourceSet
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.provider.ProviderFactory
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
 
@@ -20,7 +22,7 @@ import org.gradle.kotlin.dsl.create
  * @throws GradleException if the plugin is applied to other project then `:core:featureflag`
  */
 @Suppress("unused")
-abstract class FeatureFlagLibraryPlugin : Plugin<Project> {
+abstract class FeatureFlagLibraryPlugin @Inject constructor(providers: ProviderFactory) : Plugin<Project> {
     override fun apply(target: Project) {
         if (target == target.rootProject.project(FEATURE_FLAG_MODULE_PATH)) {
             val extension = target.extensions.create<FeatureFlagPluginExtension>(FeatureFlagPluginExtension.NAME)
@@ -50,7 +52,9 @@ abstract class FeatureFlagLibraryPlugin : Plugin<Project> {
         pluginManager.apply(BuildConfigPlugin::class.java)
         configure<BuildConfigExtension> {
             packageName("net.thunderbird.core.featureflag.config")
-            val featureFlagRemoteUrl: String? = loadLocalProperties().getProperty("featureflag.remote.url")
+            val featureFlagRemoteUrl: String? = loadLocalProperties().getProperty(REMOTE_FEATURE_FLAG_URL_KEY)
+                ?: providers.gradleProperty(REMOTE_FEATURE_FLAG_URL_KEY).orNull
+                ?: throw GradleException("Missing '$REMOTE_FEATURE_FLAG_URL_KEY' definition at gradle.properties")
             buildConfigField(
                 type = String::class.java,
                 name = "FEATURE_FLAG_REMOTE_URL",
@@ -73,6 +77,7 @@ abstract class FeatureFlagLibraryPlugin : Plugin<Project> {
     }
 
     private companion object {
+        const val REMOTE_FEATURE_FLAG_URL_KEY = "tfa.featureflag.remote.url"
         const val KOTLIN_MULTIPLATFORM_PLUGIN_ID = "org.jetbrains.kotlin.multiplatform"
         const val FEATURE_FLAG_MODULE_PATH = ":core:featureflag"
     }
