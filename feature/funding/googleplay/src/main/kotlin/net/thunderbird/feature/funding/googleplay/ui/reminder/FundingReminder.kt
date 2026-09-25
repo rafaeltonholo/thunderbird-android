@@ -11,8 +11,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.thunderbird.core.android.common.activity.ActivityProvider
 import net.thunderbird.feature.funding.api.FundingSettings
-import net.thunderbird.feature.funding.googleplay.ui.reminder.FundingReminderContract.ActivityLifecycleObserver
-import net.thunderbird.feature.funding.googleplay.ui.reminder.FundingReminderContract.FragmentLifecycleObserver
+import net.thunderbird.feature.funding.common.api.FUNDING_REMINDER_DELAY_MILLIS
+import net.thunderbird.feature.funding.common.api.FUNDING_REMINDER_MIN_ACTIVITY_MILLIS
+import net.thunderbird.feature.funding.common.api.FundingReminderContract
+import net.thunderbird.feature.funding.common.api.FundingReminderContract.ActivityLifecycleObserver
+import net.thunderbird.feature.funding.common.api.FundingReminderContract.FragmentLifecycleObserver
 
 class FundingReminder(
     private val activityProvider: ActivityProvider,
@@ -43,7 +46,7 @@ class FundingReminder(
     ) {
         scope.launch {
             // Wait a bit so settings can be ready to be used.
-            while (settings.getReminderReferenceTimestamp() != 0L && !settings.isReady()) {
+            while (wasReminderShown() && !settings.isReady()) {
                 delay(250.milliseconds)
             }
             val activity = activityProvider.getCurrent() as? AppCompatActivity ?: return@launch
@@ -143,14 +146,21 @@ class FundingReminder(
     }
 
     private fun showSecondFundingReminderDialog(fragmentManager: FragmentManager) {
-        // TODO: This implementation is currently the same as showFundingReminderDialog(),
-        //  but will differ after the new UI and logic to block the first reminder for new users is introduced
-        //  GitHub ticket: #11620
         scope.launch {
             val now = clock.now().toEpochMilliseconds()
+            val hasSeenFundingReminderBeforeCount = settings.getReminderShownCount() == 0 &&
+                settings.getReminderShownTimestamp() != 0L
+
             settings.setReminderShownTimestamp(now)
             settings.setLastReminderShownActivityAmount(settings.getActivityCounterInMillis())
-            settings.incrementReminderShownCount()
+
+            // Users who saw the first popup before the counter was added will need to increment this
+            // twice as to not potentially see a third one until we release another.
+            if (hasSeenFundingReminderBeforeCount) {
+                settings.setReminderShownCount(2)
+            } else {
+                settings.incrementReminderShownCount()
+            }
         }
         dialog.show(fragmentManager)
     }
