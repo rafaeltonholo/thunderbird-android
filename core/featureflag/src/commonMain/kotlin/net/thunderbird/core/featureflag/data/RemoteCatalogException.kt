@@ -9,7 +9,6 @@ class RemoteCatalogException(
 ) : IOException(message, cause) {
     enum class Code {
         RemoteCatalogUserDisabled,
-        CacheHeadRequestFailed,
         CantWriteCacheFile,
         CantReadCacheFile,
     }

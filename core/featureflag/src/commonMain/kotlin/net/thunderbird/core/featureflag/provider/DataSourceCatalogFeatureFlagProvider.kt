@@ -42,5 +42,5 @@ abstract class DataSourceCatalogFeatureFlagProvider internal constructor(
      *
      * @return A Flow that emits the feature flag catalog containing flag definitions and overrides.
      */
-    open suspend fun loadCatalog(): FeatureFlagCatalog? = dataSource.load().first()
+    open suspend fun loadCatalog(): FeatureFlagCatalog? = dataSource.load()
 }
