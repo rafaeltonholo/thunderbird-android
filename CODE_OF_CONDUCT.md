@@ -1,5 +1,7 @@
 # Code of Conduct
 
+Change!
+
 It is our intention that our repository remains a useful tool for reporting and commenting on bugs, feature requests, and tasks for the Thunderbird community. No single contributor's work outweighs the importance of civility and professionalism in the Thunderbird community.
 
 In order to keep our repository a useful, inclusive place we have guidelines which, by using this repository, you agree to follow. In addition, your participation on this repository is also subject to the [Mozilla Community Participation Guidelines](https://www.mozilla.org/about/governance/policies/participation/).
