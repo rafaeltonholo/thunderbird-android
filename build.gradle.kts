@@ -25,6 +25,8 @@ featureFlag {
     catalog.set(dir.file("config/featureflag/thunderbird_mobile_featureflag.catalog.json"))
 }
 
+
+
 tasks.withType<Test>().configureEach {
     testLogging {
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
